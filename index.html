@@ -1,0 +1,2302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1044 TUTA · 林家兜风接送电台 (City Pop × 多彩生活 v2.0)</title>
+<style>
+  :root {
+    --bg: #FFFBEB;
+    --card: #FFFFFF;
+    --text: #0F172A;
+    --muted: #475569;
+    --hero-grad: linear-gradient(135deg, #0284C7 0%, #2563EB 48%, #EC4899 100%);
+    --border-w: 3px;
+    --border-c: #0F172A;
+    --hard-shadow: 4px 4px 0px #0F172A;
+    --hard-shadow-sm: 2px 2px 0px #0F172A;
+  }
+  body.manual-mode {
+    --bg: #FAF6F0;
+    --hero-grad: linear-gradient(135deg, #2b1d0e 0%, #13242b 55%, #0f766e 100%);
+    --border-w: 2px;
+    --border-c: #CBD5E1;
+    --hard-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    --hard-shadow-sm: 0 3px 10px rgba(15, 23, 42, 0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+    background-size: 16px 16px;
+    color: var(--text);
+    padding: 12px 16px;
+    transition: background 0.25s ease;
+  }
+
+  @keyframes flagFlutter {
+    0%, 100% { transform: perspective(200px) rotateY(0deg) skewY(0deg); }
+    50% { transform: perspective(200px) rotateY(15deg) skewY(-4deg); }
+  }
+  @keyframes r22breath {
+    0%, 100% { transform: scale(1); box-shadow: 4px 4px 0px #0F172A, 0 0 0 0 rgba(234, 179, 8, 0.75); }
+    50% { transform: scale(1.018); box-shadow: 4px 4px 0px #0F172A, 0 0 0 9px rgba(234, 179, 8, 0); }
+  }
+
+  /* Toast Banner */
+  .toast-box {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    z-index: 9999;
+    background: #0F172A;
+    color: #FEF08A;
+    border: 3px solid #FDE047;
+    box-shadow: 4px 4px 0px #000;
+    padding: 10px 16px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    font-weight: 900;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    max-width: 460px;
+  }
+
+  /* 1. TOP HUD: Showa City Pop Music Player + Game Status Bar */
+  .top-hud {
+    background: var(--hero-grad);
+    color: #FFFFFF;
+    border-radius: 18px;
+    padding: 12px 18px;
+    border: var(--border-w) solid var(--border-c);
+    box-shadow: var(--hard-shadow);
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hud-row1 { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .brand-box { display: flex; align-items: center; gap: 10px; }
+  .flag-icon { display: inline-block; font-size: 23px; animation: flagFlutter 2.2s infinite ease-in-out; }
+  .brand-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: #FEF08A;
+    text-shadow: 2px 2px 0px #0F172A;
+    letter-spacing: 0.3px;
+  }
+  .brand-sub { font-size: 11.5px; font-weight: 800; color: #E0F2FE; margin-top: 2px; }
+
+  /* Right-aligned 1-Click Cycle Toggles (能按不下拉，往右边去) */
+  .right-controls { display: flex; gap: 8px; align-items: center; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+  .cycle-btn {
+    background: #FEF08A;
+    color: #0F172A;
+    border: 2.5px solid #0F172A;
+    box-shadow: var(--hard-shadow-sm);
+    padding: 6px 12px;
+    border-radius: 11px;
+    font-size: 12.5px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+  }
+  .cycle-btn:active { transform: translate(2px, 2px); }
+  .cycle-btn.role-dad { background: #34D399; color: #064E3B; }
+  .cycle-btn.role-mom { background: #FDA4AF; color: #881337; }
+
+  /* Live Broadcast Banner + Mandatory Clock ETA Badge */
+  .sys-notify-bar {
+    margin-top: 10px;
+    background: #FFFFFF;
+    color: #0F172A;
+    border-radius: 13px;
+    padding: 9px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border: 2.5px solid #0F172A;
+    border-left: 8px solid #10B981;
+    box-shadow: var(--hard-shadow-sm);
+  }
+  .notify-left { display: flex; align-items: center; gap: 10px; }
+  .emoji-slot { width: 30px; text-align: center; font-size: 22px; flex-shrink: 0; }
+  .eta-badge {
+    background: #10B981;
+    color: #FFFFFF;
+    font-weight: 900;
+    font-size: 14px;
+    padding: 7px 14px;
+    border-radius: 10px;
+    border: 2px solid #0F172A;
+    box-shadow: 2px 2px 0px #0F172A;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+
+  /* Retro Walkman / VU Journey Progress Bar */
+  .vu-bar {
+    margin-top: 9px;
+    background: rgba(15, 23, 42, 0.78);
+    border: 2px solid #0F172A;
+    border-radius: 11px;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 900;
+  }
+  .vu-step {
+    padding: 3px 9px;
+    border-radius: 7px;
+    color: #94A3B8;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .vu-step.done { color: #34D399; background: rgba(16, 185, 129, 0.16); }
+  .vu-step.curr { color: #0F172A; background: #FDE047; border: 1.5px solid #000; box-shadow: 1px 1px 0 #000; }
+  .vu-line { flex: 1; height: 3px; background: rgba(255,255,255,0.25); border-radius: 2px; }
+  .vu-line.done { background: #34D399; }
+
+  /* 2. TIER-1 KIOSK DUAL-CARD SELECTOR (QR 点餐一级分流) */
+  .kiosk-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .kiosk-card {
+    background: #FFFFFF;
+    border: var(--border-w) solid var(--border-c);
+    box-shadow: var(--hard-shadow-sm);
+    border-radius: 15px;
+    padding: 10px 14px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.15s ease;
+  }
+  .kiosk-card.k-ciq { background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%); }
+  .kiosk-card.k-mom { background: linear-gradient(135deg, #FFE4E6 0%, #FECDD3 100%); }
+  .kiosk-card.active {
+    border-width: 3.5px;
+    border-color: #0F172A;
+    box-shadow: 4px 4px 0px #0F172A;
+    outline: 3px solid #FACC15;
+  }
+  .kiosk-left { display: flex; align-items: center; gap: 10px; }
+  .kiosk-title { font-size: 15px; font-weight: 900; color: #0F172A; }
+  .kiosk-sub { font-size: 12px; font-weight: 800; color: #334155; margin-top: 2px; }
+  .kiosk-tag {
+    background: #0F172A;
+    color: #FEF08A;
+    font-size: 11.5px;
+    font-weight: 900;
+    padding: 5px 10px;
+    border-radius: 9px;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  /* 3. MAIN WORKSPACE: Left 6 Colorful Mood Status Buttons + Right Google Maps & Quick Actions */
+  .main-grid { display: grid; grid-template-columns: 1.42fr 1fr; gap: 14px; }
+  .panel {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 12px 14px;
+    border: var(--border-w) solid var(--border-c);
+    box-shadow: var(--hard-shadow);
+  }
+  .panel-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 9px;
+    gap: 8px;
+  }
+  .panel-title { font-size: 13.5px; font-weight: 900; color: #0F172A; display: flex; align-items: center; gap: 6px; }
+  .reset-btn {
+    margin-left: auto;
+    background: #F1F5F9;
+    color: #0F172A;
+    border: 2px solid #0F172A;
+    box-shadow: 2px 2px 0px #0F172A;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  /* 6 Colorful Emotional Status Cards */
+  .mood-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+  .mood-card {
+    border-radius: 13px;
+    padding: 10px 12px;
+    border: 2.5px solid #0F172A;
+    box-shadow: 3px 3px 0px #0F172A;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 86px;
+    transition: transform 0.12s ease;
+  }
+  .mood-card:active:not(.m-disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #0F172A; }
+  .mood-top { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 900; margin-bottom: 4px; }
+  .mood-row-main { display: flex; align-items: flex-start; gap: 7px; }
+  .mood-emoji { width: 22px; text-align: center; font-size: 17px; flex-shrink: 0; line-height: 1.25; }
+  .mood-title { font-size: 14px; font-weight: 900; line-height: 1.28; margin-bottom: 4px; }
+  .mood-eta { font-size: 11.5px; font-weight: 800; padding-left: 29px; }
+
+  /* Card Semantic Themes */
+  .m-disabled {
+    background: #F1F5F9 !important;
+    border: 2px dashed #94A3B8 !important;
+    color: #64748B !important;
+    box-shadow: none !important;
+    cursor: not-allowed;
+    opacity: 0.78;
+  }
+  .m-emerald { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); color: #064E3B; }
+  .m-sky { background: linear-gradient(135deg, #E0F2FE, #BAE6FD); color: #0C4A6E; }
+  .m-amber { background: linear-gradient(135deg, #FEF3C7, #FDE68A); color: #78350F; }
+  .m-rose { background: linear-gradient(135deg, #FFE4E6, #FECDD3); color: #881337; }
+  .m-violet { background: linear-gradient(135deg, #F3E8FF, #E9D5FF); color: #4C1D95; }
+  .m-gold-pulse {
+    background: linear-gradient(135deg, #FEF08A, #FACC15) !important;
+    color: #0F172A !important;
+    border: 3px solid #0F172A !important;
+    animation: r22breath 1.6s infinite ease-in-out;
+  }
+
+  /* Right Panel: Location Pills + Map + No-Typing Quick Pills */
+  .loc-pills { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; margin-bottom: 8px; }
+  .loc-pill {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 900;
+    border: 2px solid #0F172A;
+    box-shadow: 2px 2px 0px #0F172A;
+    background: #F8FAFC;
+    color: #0F172A;
+    cursor: pointer;
+  }
+  .loc-pill.active { background: #0284C7; color: #FFFFFF; }
+
+  .map-frame {
+    width: 100%;
+    height: 156px;
+    border-radius: 12px;
+    border: 2.5px solid #0F172A;
+    box-shadow: 3px 3px 0px #0F172A;
+    overflow: hidden;
+    margin-bottom: 9px;
+    background: #E2E8F0;
+  }
+  .right-actions { display: flex; flex-direction: column; gap: 7px; }
+  .act-btn {
+    padding: 10px 13px;
+    border-radius: 11px;
+    font-size: 13px;
+    font-weight: 900;
+    border: 2.5px solid #0F172A;
+    box-shadow: 3px 3px 0px #0F172A;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .act-wa { background: #10B981; color: #042F2E; }
+  .act-notify { background: #38BDF8; color: #082F49; }
+  .quick-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; margin-top: 2px; }
+  .quick-pill {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 900;
+    border: 2px solid #0F172A;
+    box-shadow: 2px 2px 0px #0F172A;
+    background: #FEF9C3;
+    color: #0F172A;
+    cursor: pointer;
+  }
+  .quick-pill:hover { background: #FDE047; }
+
+  /* MOBILE PORTRAIT SINGLE-COLUMN LOCK (爸妈用手机竖屏 + Status按钮同一排从上到下) */
+  body {
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 10px 10px 24px 10px;
+    background-color: #0F172A;
+  }
+  .top-hud { padding: 12px 13px; border-radius: 16px; margin-bottom: 10px; }
+  .hud-row1 { flex-direction: column; align-items: stretch; gap: 8px; }
+  .brand-title { font-size: 18px; }
+  .brand-sub { font-size: 11px; }
+  .right-controls { width: 100%; justify-content: flex-end; gap: 6px; }
+  .cycle-btn { padding: 6px 9px; font-size: 11.5px; }
+  .sys-notify-bar { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
+  .eta-badge { width: 100%; text-align: center; font-size: 13.5px; padding: 6px 10px; }
+  .vu-bar { font-size: 10.5px; padding: 6px 8px; flex-wrap: wrap; gap: 4px; }
+  .vu-step { padding: 2px 6px; font-size: 10.5px; }
+  .kiosk-bar { grid-template-columns: 1fr; gap: 8px; margin-bottom: 10px; }
+  .kiosk-card { padding: 10px 12px; }
+  .kiosk-title { font-size: 14.5px; }
+  .kiosk-sub { font-size: 11.5px; }
+  .main-grid { grid-template-columns: 1fr; gap: 12px; }
+  .mood-grid { grid-template-columns: 1fr !important; gap: 8px; }
+  .mood-card { min-height: auto; padding: 11px 13px; }
+  .mood-title { font-size: 14.5px; }
+  .mood-eta { font-size: 12px; }
+
+
+  @keyframes activeDynamicBorder {
+    0%, 100% {
+      box-shadow: 0 0 0 3px #10B981, 0 0 16px rgba(16, 185, 129, 0.75), 3px 3px 0px #0F172A;
+      transform: translateY(0);
+    }
+    50% {
+      box-shadow: 0 0 0 5px #FACC15, 0 0 24px rgba(250, 204, 21, 0.95), 3px 3px 0px #0F172A;
+      transform: translateY(-1px);
+    }
+  }
+  @keyframes currentStatusDynamicFrame {
+    0%, 100% {
+      box-shadow: 0 0 0 3px #10B981, 0 0 18px rgba(16, 185, 129, 0.85), 3px 3px 0px #0F172A;
+      border-color: #059669 !important;
+    }
+    50% {
+      box-shadow: 0 0 0 5px #34D399, 0 0 26px rgba(52, 211, 153, 1), 3px 3px 0px #0F172A;
+      border-color: #10B981 !important;
+    }
+  }
+  .kiosk-card.active {
+    outline: none !important;
+    border: 3px solid #0F172A !important;
+    animation: activeDynamicBorder 1.5s infinite ease-in-out !important;
+  }
+  .kiosk-card.inactive-mission {
+    background: #E2E8F0 !important;
+    border: 2px dashed #94A3B8 !important;
+    box-shadow: none !important;
+    cursor: default !important;
+  }
+  .kiosk-card.inactive-mission .kiosk-left {
+    opacity: 0.52;
+    filter: grayscale(100%);
+  }
+  .kiosk-card.inactive-mission .kiosk-title,
+  .kiosk-card.inactive-mission .kiosk-sub {
+    color: #64748B !important;
+  }
+  .kiosk-tag.active-tag {
+    background: #059669 !important;
+    color: #FFFFFF !important;
+    border: 2px solid #0F172A;
+    box-shadow: 2px 2px 0px #0F172A;
+    pointer-events: none;
+  }
+  .kiosk-tag.switch-btn {
+    background: linear-gradient(135deg, #FACC15, #F59E0B) !important;
+    color: #0F172A !important;
+    border: 2.5px solid #0F172A !important;
+    box-shadow: 2px 2px 0px #0F172A !important;
+    cursor: pointer !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    opacity: 1 !important;
+    filter: none !important;
+    transition: transform 0.12s ease;
+  }
+  .kiosk-tag.switch-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #0F172A !important;
+  }
+  .mood-card.m-current-status {
+    border: 3px solid #059669 !important;
+    animation: currentStatusDynamicFrame 1.4s infinite ease-in-out !important;
+    position: relative;
+  }
+  .curr-status-pill {
+    background: #059669;
+    color: #FFFFFF;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 900;
+    border: 1.5px solid #0F172A;
+  }
+
+
+  .mood-card.m-other-grey {
+    background: #E2E8F0 !important;
+    border: 2px dashed #94A3B8 !important;
+    color: #64748B !important;
+    box-shadow: none !important;
+    cursor: default !important;
+  }
+  .mood-card.m-other-grey .mood-row-main,
+  .mood-card.m-other-grey .mood-eta,
+  .mood-card.m-other-grey .mood-step-label {
+    opacity: 0.58;
+    color: #64748B !important;
+  }
+  .status-switch-btn {
+    background: linear-gradient(135deg, #FACC15, #F59E0B) !important;
+    color: #0F172A !important;
+    border: 2px solid #0F172A !important;
+    box-shadow: 2px 2px 0px #0F172A !important;
+    padding: 4px 10px !important;
+    border-radius: 8px !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+    filter: none !important;
+    white-space: nowrap;
+  }
+  .status-switch-btn.next-pulse {
+    background: linear-gradient(135deg, #FEF08A, #FACC15) !important;
+    animation: r22breath 1.4s infinite ease-in-out !important;
+  }
+  .status-switch-btn.prev-switch {
+    background: linear-gradient(135deg, #BAE6FD, #38BDF8) !important;
+    color: #0F172A !important;
+  }
+  .status-done-pill {
+    background: #CBD5E1;
+    color: #475569;
+    padding: 3px 8px;
+    border-radius: 7px;
+    font-size: 10.5px;
+    font-weight: 900;
+  }
+
+
+  .hdr-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .prev-btn {
+    background: linear-gradient(135deg, #FEF08A, #FACC15);
+    color: #0F172A;
+    border: 2px solid #0F172A;
+    box-shadow: 2px 2px 0px #0F172A;
+    padding: 4px 9px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .prev-btn:disabled, .prev-btn.disabled {
+    background: #E2E8F0 !important;
+    color: #94A3B8 !important;
+    border: 2px dashed #CBD5E1 !important;
+    box-shadow: none !important;
+    cursor: not-allowed !important;
+  }
+
+
+  /* Fluid Responsive Adaptation for All Phone Screen Sizes (360px / 390px / 430px / Foldable / Chrome) */
+  html, body {
+    width: 100%;
+    min-height: 100dvh;
+    margin: 0;
+    padding: clamp(6px, 2vw, 14px) !important;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+  .app-shell {
+    width: 100% !important;
+    max-width: min(100%, 480px) !important;
+    margin: 0 auto !important;
+    gap: clamp(8px, 2vw, 12px) !important;
+  }
+  .hud-title {
+    font-size: clamp(16px, 4.5vw, 20px) !important;
+  }
+  .notify-title {
+    font-size: clamp(13.5px, 3.8vw, 15.5px) !important;
+  }
+  .mood-title {
+    font-size: clamp(13px, 3.6vw, 14.5px) !important;
+  }
+  /* Prominent Top Pop-up Notification Modal Banner */
+  .popup-alert-banner {
+    background: linear-gradient(135deg, #0F172A, #1E293B);
+    color: #FFFFFF;
+    border: 2.5px solid #FACC15;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.45), 3px 3px 0px #0F172A;
+    border-radius: 14px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    animation: activeDynamicBorder 1.8s infinite ease-in-out;
+  }
+  .popup-alert-banner.cancelled-mode {
+    background: linear-gradient(135deg, #7F1D1D, #991B1B) !important;
+    border-color: #FCA5A5 !important;
+  }
+  .popup-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .popup-bell {
+    font-size: 22px;
+    background: #FACC15;
+    color: #0F172A;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #0F172A;
+    flex-shrink: 0;
+  }
+  .popup-tag {
+    font-size: 10.5px;
+    font-weight: 900;
+    color: #FACC15;
+    letter-spacing: 0.3px;
+  }
+  .popup-msg {
+    font-size: 13px;
+    font-weight: 900;
+    color: #FFFFFF;
+    line-height: 1.3;
+  }
+  .popup-eta {
+    font-size: 11px;
+    font-weight: 800;
+    color: #6EE7B7;
+    margin-top: 2px;
+  }
+  /* Cancel / Urgent Matter Button & Cancelled Card */
+  .cancel-emergency-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .cancel-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #FEE2E2, #FECACA);
+    color: #991B1B;
+    border: 2.5px solid #DC2626;
+    box-shadow: 3px 3px 0px #0F172A;
+    border-radius: 12px;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .cancel-btn.is-cancelled {
+    background: linear-gradient(135deg, #DC2626, #B91C1C) !important;
+    color: #FFFFFF !important;
+    border: 3px solid #FEF08A !important;
+    animation: r22breath 1.2s infinite ease-in-out !important;
+  }
+  .cancel-right-pill {
+    background: #DC2626;
+    color: #FFFFFF;
+    padding: 4px 9px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 900;
+    border: 1.5px solid #0F172A;
+    white-space: nowrap;
+  }
+  .cancel-btn.is-cancelled .cancel-right-pill {
+    background: #10B981;
+    color: #FFFFFF;
+  }
+  /* Visual Live Radar + Google Maps Hybrid Box */
+  .map-radar-banner {
+    background: linear-gradient(135deg, #0F172A, #1E3A8A);
+    color: #FFFFFF;
+    border-radius: 11px;
+    padding: 8px 11px;
+    margin-bottom: 7px;
+    border: 2px solid #0F172A;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    font-weight: 900;
+  }
+  .map-frame {
+    height: 185px !important;
+    position: relative;
+  }
+
+
+  /* ===== Exact Toolbox Tutorial Dynamic Spotlight & Breathing Ring (r22breath + r22tag) ===== */
+  @keyframes r22ToolboxPulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.9), 0 0 10px 2px rgba(45, 212, 191, 0.65), 3px 3px 0px #0F172A;
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 0 10px rgba(16, 185, 129, 0), 0 0 22px 6px rgba(250, 204, 21, 0.75), 3px 3px 0px #0F172A;
+      transform: scale(1.018);
+    }
+  }
+  @keyframes r22GoldPulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.95), 0 0 8px 2px rgba(245, 158, 11, 0.65), 2px 2px 0px #0F172A;
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(250, 204, 21, 0), 0 0 18px 4px rgba(250, 204, 21, 0.8), 2px 2px 0px #0F172A;
+      transform: scale(1.04);
+    }
+  }
+  @keyframes r22PointerNudge {
+    0%, 100% { transform: translateX(0); opacity: 1; }
+    50% { transform: translateX(4px); opacity: 0.72; }
+  }
+  .kiosk-card.active {
+    border: 3px solid #10B981 !important;
+    animation: r22ToolboxPulse 1.6s ease-in-out infinite !important;
+    position: relative;
+  }
+  .mood-card.m-current-status {
+    border: 3px solid #10B981 !important;
+    animation: r22ToolboxPulse 1.6s ease-in-out infinite !important;
+    position: relative;
+  }
+  .status-switch-btn.next-pulse {
+    animation: r22GoldPulse 1.5s ease-in-out infinite !important;
+  }
+  .toolbox-pointer {
+    display: inline-block;
+    animation: r22PointerNudge 1.2s ease-in-out infinite;
+  }
+
+  /* ===== Checkpoint Offline Alert & Queue Banner ===== */
+  .net-cycle-btn {
+    padding: 6px 11px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+    border: 2.5px solid #0F172A;
+    box-shadow: 2px 2px 0px #0F172A;
+    background: #D1FAE5;
+    color: #065F46;
+    white-space: nowrap;
+  }
+  .net-cycle-btn.offline {
+    background: #FEE2E2 !important;
+    color: #991B1B !important;
+    border-color: #DC2626 !important;
+    animation: r22GoldPulse 1.2s infinite ease-in-out;
+  }
+  .offline-alert-box {
+    display: none;
+    background: linear-gradient(135deg, #7F1D1D, #B91C1C);
+    color: #FFFFFF;
+    border: 3px solid #FACC15;
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.35), 3px 3px 0px #0F172A;
+    border-radius: 14px;
+    padding: 10px 12px;
+    flex-direction: column;
+    gap: 7px;
+    animation: r22ToolboxPulse 1.4s infinite ease-in-out;
+  }
+  .offline-alert-box.show {
+    display: flex !important;
+  }
+  .offline-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 900;
+    color: #FEF08A;
+  }
+  .offline-desc {
+    font-size: 11.5px;
+    font-weight: 800;
+    line-height: 1.35;
+    color: #FFFFFF;
+  }
+  .offline-actions {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+  .sms-fallback-btn {
+    flex: 1;
+    background: linear-gradient(135deg, #FEF08A, #FACC15);
+    color: #0F172A;
+    border: 2px solid #0F172A;
+    box-shadow: 2px 2px 0px #0F172A;
+    border-radius: 9px;
+    padding: 7px 10px;
+    font-size: 11.5px;
+    font-weight: 900;
+    cursor: pointer;
+    text-align: center;
+  }
+  /* Always-Visible Offline Checkpoint Vector Route Map */
+  .offline-svg-map {
+    background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+    border: 2.5px solid #0F172A;
+    box-shadow: 3px 3px 0px #0F172A;
+    border-radius: 12px;
+    padding: 9px 10px;
+    margin-bottom: 8px;
+    color: #FFFFFF;
+  }
+  .svg-route-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 900;
+    color: #38BDF8;
+    margin-bottom: 6px;
+  }
+  .svg-nodes {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    padding: 6px 2px;
+  }
+  .svg-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    z-index: 2;
+    font-size: 10px;
+    font-weight: 900;
+    color: #94A3B8;
+    text-align: center;
+  }
+  .svg-node .n-dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #334155;
+    border: 2px solid #64748B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+  }
+  .svg-node.done .n-dot {
+    background: #065F46;
+    border-color: #10B981;
+    color: #FFFFFF;
+  }
+  .svg-node.done { color: #6EE7B7; }
+  .svg-node.curr .n-dot {
+    background: #FACC15;
+    border-color: #FFFFFF;
+    color: #0F172A;
+    animation: r22GoldPulse 1.3s infinite ease-in-out;
+  }
+  .svg-node.curr { color: #FEF08A; font-weight: 900; }
+  .svg-track-line {
+    flex: 1;
+    height: 4px;
+    background: #334155;
+    margin: 0 2px;
+    border-radius: 2px;
+    position: relative;
+    top: -7px;
+  }
+  .svg-track-line.done {
+    background: linear-gradient(90deg, #10B981, #FACC15);
+  }
+
+
+  .vu-bar {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    justify-content: space-between !important;
+  }
+  .vu-step {
+    font-size: 10.5px !important;
+    padding: 4px 6px !important;
+  }
+  .vu-line {
+    min-width: 6px !important;
+    max-width: 14px !important;
+  }
+
+
+  /* ===== 3-Person Family Online Status Board (Son / Dad / Mom) ===== */
+  .family-presence-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    background: rgba(15, 23, 42, 0.72);
+    border: 2px solid #0F172A;
+    border-radius: 12px;
+    padding: 6px 7px;
+  }
+  .presence-pill {
+    background: #FFFFFF;
+    border: 2px solid #10B981;
+    box-shadow: 2px 2px 0px #0F172A;
+    border-radius: 9px;
+    padding: 5px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+  }
+  .presence-pill:active { transform: translate(1px, 1px); }
+  .presence-pill.p-offline {
+    background: #FEF2F2 !important;
+    border-color: #EF4444 !important;
+    animation: r22GoldPulse 1.4s infinite ease-in-out;
+  }
+  .p-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 900;
+    color: #0F172A;
+  }
+  .p-dot {
+    font-size: 10px;
+    font-weight: 900;
+    padding: 1px 5px;
+    border-radius: 999px;
+    background: #D1FAE5;
+    color: #065F46;
+  }
+  .presence-pill.p-offline .p-dot {
+    background: #FEE2E2;
+    color: #991B1B;
+  }
+  .p-sub {
+    font-size: 9.8px;
+    font-weight: 800;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .presence-pill.p-offline .p-sub {
+    color: #B91C1C;
+  }
+
+
+  /* ===== Visual 3-Person Live Map Overlay (Shows Son, Dad, Mom Pins + Online/Offline + Route) ===== */
+  .live-3person-map {
+    background: linear-gradient(180deg, #0B192C 0%, #1E3E62 100%);
+    border: 2.5px solid #0F172A;
+    box-shadow: 3px 3px 0px #0F172A;
+    border-radius: 13px;
+    padding: 10px 11px;
+    margin-bottom: 8px;
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+  }
+  .map-grid-bg {
+    background-image: radial-gradient(rgba(56, 189, 248, 0.22) 1px, transparent 1px);
+    background-size: 14px 14px;
+    border-radius: 10px;
+    padding: 8px 6px 10px 6px;
+    border: 1.5px solid rgba(56, 189, 248, 0.35);
+    background-color: rgba(15, 23, 42, 0.55);
+  }
+  .map-pins-stage {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    margin: 6px 0 8px 0;
+    position: relative;
+  }
+  .map-pin-card {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.9);
+    border: 2px solid #10B981;
+    border-radius: 10px;
+    padding: 6px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+    z-index: 2;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  }
+  .map-pin-card.pin-offline {
+    border-color: #F59E0B !important;
+    background: rgba(127, 29, 29, 0.92) !important;
+    animation: r22GoldPulse 1.4s infinite ease-in-out;
+  }
+  .map-pin-card.pin-meetup {
+    border-color: #FACC15 !important;
+    background: rgba(6, 95, 70, 0.95) !important;
+  }
+  .pin-avatar {
+    font-size: 17px;
+    line-height: 1.1;
+  }
+  .pin-name {
+    font-size: 10.5px;
+    font-weight: 900;
+    color: #FEF08A;
+  }
+  .pin-loc {
+    font-size: 10px;
+    font-weight: 800;
+    color: #E2E8F0;
+  }
+  .pin-status-tag {
+    font-size: 9.5px;
+    font-weight: 900;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #065F46;
+    color: #6EE7B7;
+    margin-top: 2px;
+  }
+  .map-pin-card.pin-offline .pin-status-tag {
+    background: #FEF08A;
+    color: #7F1D1D;
+  }
+  .map-meet-arrow {
+    font-size: 13px;
+    font-weight: 900;
+    color: #38BDF8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+  }
+  .battery-note-bar {
+    background: rgba(16, 185, 129, 0.16);
+    border: 1.5px solid rgba(16, 185, 129, 0.5);
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #A7F3D0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  /* Parents Reply Section */
+  .parent-reply-banner {
+    background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+    border: 2.5px solid #059669;
+    box-shadow: 2px 2px 0px #0F172A;
+    border-radius: 11px;
+    padding: 8px 11px;
+    margin-bottom: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 900;
+    color: #064E3B;
+  }
+
+</style>
+</head>
+<body><style>#pinGate{position:fixed;inset:0;z-index:2147483647;background:linear-gradient(160deg,#fff4e0,#ffd9b3);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#5a3a1a}
+#pinGate h1{font-size:26px;margin:8px 0 4px}#pinGate p{margin:0 0 18px;font-size:16px}
+#pinDots{display:flex;gap:14px;margin-bottom:22px}#pinDots span{width:18px;height:18px;border-radius:50%;border:2px solid #c46a1f}#pinDots span.f{background:#c46a1f}
+#pinPad{display:grid;grid-template-columns:repeat(3,84px);gap:14px}#pinPad button{height:84px;font-size:32px;border:0;border-radius:50%;background:#fff;color:#5a3a1a;box-shadow:0 3px 8px #0002}
+#pinErr{color:#c0392b;height:22px;margin-top:12px}</style>
+<div id="pinGate"><div style="font-size:54px">🏡</div><h1>1044 TUTA</h1><p>请输入家庭密码 / Enter family PIN</p><div id="pinDots"><span></span><span></span><span></span><span></span></div>
+<div id="pinPad"></div><div id="pinErr"></div></div>
+<script>(function(){var H="33c62a2a336ae37ca20ef215f25803de63d9df76a391a35efece4ad27959324e",K="tuta_unlock",g=document.getElementById("pinGate");
+if(localStorage.getItem(K)===H){g.remove();return;}document.documentElement.style.overflow="hidden";
+var v="",pad=document.getElementById("pinPad"),dots=document.querySelectorAll("#pinDots span");
+function draw(){dots.forEach(function(d,i){d.className=i<v.length?"f":""});}
+async function chk(){var b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(v));var x=Array.from(new Uint8Array(b)).map(function(c){return c.toString(16).padStart(2,"0")}).join("");
+if(x===H){localStorage.setItem(K,H);document.documentElement.style.overflow="";g.remove();}else{document.getElementById("pinErr").textContent="密码不对，再试一次 / Wrong PIN";v="";draw();}}
+["1","2","3","4","5","6","7","8","9","⌫","0","✓"].forEach(function(k){var b=document.createElement("button");b.textContent=k;b.onclick=function(){document.getElementById("pinErr").textContent="";
+if(k==="⌫")v=v.slice(0,-1);else if(k==="✓"){if(v.length===4)chk();}else if(v.length<4){v+=k;if(v.length===4){draw();chk();return;}}draw();};pad.appendChild(b);});})();</script>
+
+  <div class="toast-box" id="toastBox"></div>
+
+  <!-- 1. TOP HUD: Showa City Pop Music Player + Live Broadcast + Mandatory ETA -->
+  <div class="top-hud">
+    <div class="hud-row1">
+      <div class="brand-box">
+        <span class="flag-icon">🇲🇾</span><span class="flag-icon">🇸🇬</span>
+        <div>
+          <div class="brand-title" id="brandTitle">1044 TUTA · 林家兜风接送电台</div>
+          <div class="brand-sub" id="brandSub">🏡 1044 TUTA 一家三口实时接送状态与预计抵达时间</div>
+        </div>
+      </div>
+
+      <!-- Top-Right 1-Click Cycle Toggles (Strict Right-Hand Ergonomics, Zero Dropdowns) -->
+      <div class="right-controls">
+        <button class="cycle-btn" id="roleCycleBtn" onclick="cycleRole()">👤 角色: 🕺 儿子 ⇄</button>
+        <button class="cycle-btn" id="langCycleBtn" onclick="cycleLang()">🌐 语言: 中文 ⇄</button>
+        <button class="cycle-btn" id="styleCycleBtn" onclick="cycleStyle()">🌴 风格: CityPop日漫 ⇄</button>
+        <button class="net-cycle-btn" id="netCycleBtn" onclick="toggleOfflineSim()">📶 网络: 有线 🟢 ⇄</button>
+      </div>
+    </div>
+
+    <!-- 3-Person Live Online Status Board (Son / Dad / Mom) -->
+    <div class="family-presence-bar" id="familyPresenceBar">
+      <div class="presence-pill" id="presSon" onclick="toggleMemberOnline('son')">
+        <div class="p-top"><span>🕺 儿子</span><span class="p-dot" id="presSonDot">🟢 有线</span></div>
+        <div class="p-sub" id="presSonSub">📍 新加坡关卡 (实时)</div>
+      </div>
+      <div class="presence-pill" id="presDad" onclick="toggleMemberOnline('dad')">
+        <div class="p-top"><span>👨🏻 Dad</span><span class="p-dot" id="presDadDot">🟢 有线</span></div>
+        <div class="p-sub" id="presDadSub">👀 已收到通知 (1044)</div>
+      </div>
+      <div class="presence-pill" id="presMom" onclick="toggleMemberOnline('mom')">
+        <div class="p-top"><span>👩🏻 妈妈</span><span class="p-dot" id="presMomDot">🟢 有线</span></div>
+        <div class="p-sub" id="presMomSub">🏡 在 1044 TUTA</div>
+      </div>
+    </div>
+
+    <!-- Live Broadcast Bar with Exact Clock Arrival Time -->
+    <div class="sys-notify-bar" id="sysNotifyBar">
+      <div class="notify-left">
+        <span class="emoji-slot" id="notifyEmoji">🔔</span>
+        <div>
+          <div style="font-size:14px;font-weight:900;color:#0F172A;" id="notifyTitle">
+            【1044 实时广播】🇸🇬 儿子刚到新加坡关卡！爸妈可以从 1044 TUTA 出门啦
+          </div>
+          <div style="font-size:12px;color:#334155;font-weight:800;margin-top:2px;" id="notifySub">
+            📍 当前目的地：JB Sentral (CIQ Pickup) &nbsp;|&nbsp; 🔊 点击任意状态卡自动换算具体抵达时间点并语音播报
+          </div>
+        </div>
+      </div>
+      <div class="eta-badge" id="etaBadge">🕒 预计 6:42 PM 抵达 (~20m)</div>
+    </div>
+
+    <!-- Retro Walkman / VU Journey Progress Bar -->
+    <div class="vu-bar" id="vuBar"></div>
+  </div>
+
+  <!-- 2. TIER-1 KIOSK DUAL-CARD SELECTOR (QR Ordering Dine-In / Take-Away Logic) -->
+  <div class="kiosk-bar">
+    <div class="kiosk-card k-ciq active" id="kioskCiq">
+      <div class="kiosk-left">
+        <span class="emoji-slot">🚗</span>
+        <div>
+          <div class="kiosk-title" id="kioskCiqTitle">1. 放工接送 · CIQ Pickup</div>
+          <div class="kiosk-sub" id="kioskCiqSub">🇲🇾 新山关卡 JB Sentral / Kempas 站 ➔ 🚗 上车点上车</div>
+        </div>
+      </div>
+      <button type="button" class="kiosk-tag active-tag" id="kioskCiqTag" onclick="selectMission('ciq')">🟢 当前任务 (动态框)</button>
+    </div>
+
+    <div class="kiosk-card k-mom inactive-mission" id="kioskMom">
+      <div class="kiosk-left">
+        <span class="emoji-slot">🏫</span>
+        <div>
+          <div class="kiosk-title" id="kioskMomTitle">2. 妈妈补习接送 · Mom Tuition</div>
+          <div class="kiosk-sub" id="kioskMomSub">👩🏻 补习中心下课接妈妈 ➔ 🚗 上车点上车</div>
+        </div>
+      </div>
+      <button type="button" class="kiosk-tag switch-btn" id="kioskMomTag" onclick="selectMission('mom')">点击切换 👉</button>
+    </div>
+  </div>
+
+  <!-- 2.4 CHECKPOINT SIGNAL DROP / OFFLINE ALERT BANNER (Auto-triggers when checkpoint has no network) -->
+  <div class="offline-alert-box" id="offlineAlertBox">
+    <div class="offline-hdr">
+      <span id="offlineTitle">⚠️ 关卡现在没线（没网络）！</span>
+      <span style="background:#FACC15;color:#0F172A;padding:2px 7px;border-radius:6px;font-size:10.5px;" id="offlineQueueBadge">📌 已记下 0 条（有线自动发）</span>
+    </div>
+    <div class="offline-desc" id="offlineDesc">
+      • 🕺 <b>儿子</b>：你照常按按钮就行，手机已经帮你记住了，一有线就会自动发给爸妈！<br>
+      • 👨🏻👩🏻 <b>爸妈不用担心</b>：关卡里经常没线，儿子照常在过关，按上面时间去接就可以啦！
+    </div>
+    <div class="offline-actions">
+      <button type="button" class="sms-fallback-btn" id="smsFallbackBtn" onclick="sendZeroDataSMS()">📩 没网也能发：点这里发普通手机信息 (SMS) 给爸妈 👉</button>
+    </div>
+  </div>
+
+  <!-- 2.5 LIVE POP-UP NOTIFICATION BANNER (Auto-pops on every Status update or Cancel) -->
+  <div class="popup-alert-banner" id="popupBanner">
+    <div class="popup-left">
+      <div class="popup-bell" id="popupBell">🔔</div>
+      <div>
+        <div class="popup-tag" id="popupTag">📲 状态更新自动弹窗通知 (已同步爸妈手机 + 语音播报)</div>
+        <div class="popup-msg" id="popupMsg">2. 刚到新加坡关卡！爸妈可以从 1044 TUTA 出门啦</div>
+        <div class="popup-eta" id="popupEta">🕒 自动计算 ETA：预计 11:58 PM 抵达 (~30 分钟)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. MAIN WORKSPACE (Mobile Portrait Fluid Single-Column: Map First + Status Steps Top-to-Bottom) -->
+  <div class="main-grid">
+    <!-- Top Map Panel: Immediately Visible Google Maps + Route Radar + Quick Pills -->
+    <div class="panel" id="mapPanelBox">
+      <div class="panel-hdr">
+        <div class="panel-title" id="mapPanelTitle">🗺️ 实时地图导航 & 上车点切换</div>
+        <span style="font-size:11px;font-weight:900;color:#0284C7;margin-left:auto;" id="ergoTag">📍 Google Maps 实时定位</span>
+      </div>
+
+      <div class="loc-pills" id="locPills"></div>
+
+      <div class="live-3person-map">
+        <div class="svg-route-hdr">
+          <span id="radarRouteText">🗺️ 三人实时地图位置（🕺儿子 ➔ 🚗上车点 ⟵ 👨🏻👩🏻爸妈）</span>
+          <span style="background:#10B981;color:#fff;padding:2px 7px;border-radius:999px;font-size:10.5px;" id="radarLiveTag">🟢 信号在线</span>
+        </div>
+        <div class="map-grid-bg">
+          <!-- 3-Person Live Avatar Pins on Map -->
+          <div class="map-pins-stage" id="mapPinsStage"></div>
+          <!-- 5-Stage Route Nodes -->
+          <div class="svg-nodes" id="offlineRadarNodes"></div>
+        </div>
+        <div class="battery-note-bar" style="margin-top:6px;" id="batteryNoteBar">
+          <span>🔋 不用一直开着网页！按按钮瞬间自动抓定位，按完可直接锁屏放口袋</span>
+          <span style="color:#FEF08A;white-space:nowrap;">省电零轮询 ⚡</span>
+        </div>
+      </div>
+
+      <div class="map-frame">
+        <iframe id="mapIframe" width="100%" height="100%" frameborder="0" style="border:0"
+          src="https://maps.google.com/maps?q=JB%20Sentral%20Johor%20Bahru&t=&z=14&ie=UTF8&iwloc=&output=embed" allowfullscreen></iframe>
+      </div>
+    </div>
+
+    <!-- Status Panel: Single-Column Top-to-Bottom Status Steps + Prev Step + Reset + Cancel Pickup -->
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="panel-title" id="stepPanelTitle">
+          <span>🕒 接送 Status · 自动计算 ETA</span>
+        </div>
+        <div class="hdr-actions">
+          <button class="prev-btn" id="prevBtn" onclick="prevStep()">⬅️ 回到上一步</button>
+          <button class="reset-btn" id="resetBtn" onclick="resetProgress()">🔄 重置进度</button>
+        </div>
+      </div>
+
+      <!-- Emergency Cancel / Temporary Matter Option -->
+      <div class="cancel-emergency-bar">
+        <button type="button" class="cancel-btn" id="cancelPickupBtn" onclick="toggleCancelPickup()">
+          <span id="cancelBtnText">🔴 临时有事 / 取消接送（通知爸妈不用出门）</span>
+          <span class="cancel-right-pill" id="cancelBtnPill">点击取消接送 👉</span>
+        </button>
+      </div>
+
+      <div class="mood-grid" id="moodGrid"></div>
+
+      <!-- 3.5 PARENTS SEPARATED RESPONSE STATUS (1. 收到 / 2. 准备出门 / 3. 已在路上 / 4. 已到上车点) -->
+      <div style="margin-top:14px;padding-top:12px;border-top:2.5px dashed #CBD5E1;">
+        <div class="panel-hdr" style="margin-bottom:7px;">
+          <div class="panel-title" id="parentPanelTitle">
+            <span>👨🏻👩🏻 爸妈回应 Status（收到 / 准备出门 / 已在路上 分开点按）</span>
+          </div>
+          <div class="hdr-actions">
+            <button class="prev-btn" id="parentPrevBtn" onclick="prevParentStep()">⬅️ 回到上一步</button>
+            <button class="reset-btn" id="parentResetBtn" onclick="resetParentProgress()">🔄 重置</button>
+          </div>
+        </div>
+        <div class="parent-reply-banner" id="parentLiveBanner">
+          <span id="parentLiveText">📣 爸妈当前回应：🔑 2. 准备出门（正拿车钥匙准备从 1044 TUTA 出发）</span>
+          <span style="background:#059669;color:#fff;padding:3px 8px;border-radius:999px;font-size:10.5px;white-space:nowrap;" id="parentEtaPill">🕒 预计 15m 到上车点</span>
+        </div>
+        <div class="mood-grid" id="parentMoodGrid"></div>
+      </div>
+
+      <div class="right-actions" style="margin-top:10px;">
+        <button class="act-btn act-wa" onclick="triggerWhatsApp()">
+          <span id="waBtnText">📲 一键 WhatsApp 唤醒爸妈 (附具体抵达时间)</span>
+          <span id="waBtnRight">👉 点我发送</span>
+        </button>
+        <button class="act-btn act-notify" onclick="speakCurrentStatus()">
+          <span id="voiceBtnText">🔊 语音播报当前状态 & 预计抵达时间 (Dad Auto EN)</span>
+          <span id="voiceBtnRight">🔊 立即播报 👉</span>
+        </button>
+        <div class="quick-row" id="quickRow"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const state = {
+    roleIdx: 0, // 0: 儿子, 1: Dad (Auto 100% EN), 2: Mom
+    langIdx: 0, // 0: zh, 1: en, 2: bm
+    styleIdx: 0, // 0: CityPop, 1: Manual
+    mission: 'ciq', // 'ciq' | 'mom'
+    activeStep: 2, // 1..6 (Step 1 is completed/greyed out, Step 2 is done or current, Step 3 is pulsing next!)
+    activeLocIdx: 0,
+    lastEtaMin: 20,
+    lastCustomMsg: null,
+    isCancelled: false,
+    isOffline: !navigator.onLine,
+    offlineQueue: [],
+    memberOnline: { son: true, dad: true, mom: true },
+    parentStep: 2
+  };
+
+  const ROLES = [
+    { id: 'son', zh: '👤 角色: 🕺 儿子 ⇄', en: '👤 Role: 🕺 Son ⇄', bm: '👤 Peranan: 🕺 Anak ⇄', cls: '' },
+    { id: 'dad',     zh: '👤 Role: 👨🏻 Dad (Auto 100% EN) ⇄', en: '👤 Role: 👨🏻 Dad (Auto 100% EN) ⇄', bm: '👤 Role: 👨🏻 Dad (Auto 100% EN) ⇄', cls: 'role-dad' },
+    { id: 'mom',     zh: '👤 角色: 👩🏻 妈妈 Mom ⇄', en: '👤 Role: 👩🏻 Mom ⇄', bm: '👤 Peranan: 👩🏻 Ibu Mom ⇄', cls: 'role-mom' }
+  ];
+
+  const I18N = {
+    zh: {
+      brandTitle: '1044 TUTA · 林家兜风接送电台',
+      brandSub: '🏡 1044 TUTA 一家三口实时接送状态与预计抵达时间',
+      langBtn: '🌐 语言: 中文 ⇄',
+      styleCity: '🌴 风格: CityPop日漫 ⇄',
+      styleManual: '🌈 风格: 手册多彩 ⇄',
+      kioskCiqTitle: '1. 放工接送 · CIQ Pickup',
+      kioskCiqSub: '🇲🇾 新山关卡 JB Sentral / Kempas 站 ➔ 🚗 上车点上车',
+      kioskMomTitle: '2. 妈妈补习接送 · Mom Tuition',
+      kioskMomSub: '👩🏻 补习中心下课接妈妈 ➔ 🚗 上车点上车',
+      kioskActive: '👉 当前任务',
+      kioskSwitch: '点击切换 👉',
+      stepPanelTitle: '🕒 接送 Status · 自动计算 ETA',
+      prevBtn: '⬅️ 回到上一步',
+      resetBtn: '🔄 重置进度',
+      mapPanelTitle: '🗺️ 上车地点导航 & 一键快捷语音',
+      ergoTag: '📍 Google Maps',
+      waBtnRight: '👉 点我发送',
+      voiceBtnText: '🔊 语音播报当前状态 & 预计抵达时间 (Dad Auto EN)',
+      voiceBtnRight: '🔊 立即播报 👉',
+      lockedBadge: '🔒 已完成 · 置灰不可选',
+      pulseBadge: '✨ 闪烁：点我发通知 👈',
+      readyBadge: '🟢 点击发送状态',
+      cautionBadge: '🟠 需注意路况',
+      vuCiq: ['🏢 新加坡放工', '🇸🇬 新加坡关卡', '🚌 巴士过长堤', '🇲🇾 马来西亚关卡', '🚗 上车点上车'],
+      vuMom: ['🏡 1044出发', '🚗 前往补习中心', '🏫 补习中心下课', '🚗 上车点上车']
+    },
+    en: {
+      brandTitle: '1044 TUTA · Lim Family Pickup Hub',
+      brandSub: '🏡 1044 TUTA Family Pickup Live Status & Arrival Time',
+      langBtn: '🌐 Lang: ENGLISH ⇄',
+      styleCity: '🌴 Style: CityPop 90s ⇄',
+      styleManual: '🌈 Style: Warm Manual ⇄',
+      kioskCiqTitle: '1. Work Pickup · JB CIQ / Kempas',
+      kioskCiqSub: '🇲🇾 JB Sentral CIQ / Kempas Baru ➔ 🚗 上车点上车',
+      kioskMomTitle: '2. Mom Tuition Center Pickup',
+      kioskMomSub: '👩🏻 Pick Up Mom After Tuition Class ➔ 🚗 上车点上车',
+      kioskActive: '👉 ACTIVE MISSION',
+      kioskSwitch: 'TAP TO SWITCH 👉',
+      stepPanelTitle: '🕒 Pickup Status · Auto-Calculated ETA',
+      prevBtn: '⬅️ Prev Step',
+      resetBtn: '🔄 Reset',
+      mapPanelTitle: '🗺️ Pickup Map & 1-Tap Quick Messages',
+      ergoTag: '📍 Google Maps',
+      waBtnRight: '👉 TAP TO SEND',
+      voiceBtnText: '🔊 Speak Status & Exact Arrival Time Aloud (English TTS)',
+      voiceBtnRight: '🔊 SPEAK NOW 👉',
+      lockedBadge: '🔒 COMPLETED · LOCKED',
+      pulseBadge: '✨ PULSING: TAP NOW 👈',
+      readyBadge: '🟢 TAP TO BROADCAST',
+      cautionBadge: '🟠 TRAFFIC CAUTION',
+      vuCiq: ['🏢 SG Office', '🇸🇬 SG CIQ', '🚌 Causeway Bus', '🇲🇾 Malaysia CIQ', '🚗 Pickup Point'],
+      vuMom: ['🏡 1044 TUTA', '🚗 Heading to Tuition', '🏫 Pick Up Mom', '🏡 Home 1044 TUTA']
+    },
+    bm: {
+      brandTitle: '1044 TUTA · Radio Jemput Keluarga Lim',
+      brandSub: '🏡 1044 TUTA Status Jemput Keluarga & Waktu Tiba',
+      langBtn: '🌐 Bahasa: BM ⇄',
+      styleCity: '🌴 Gaya: CityPop 90s ⇄',
+      styleManual: '🌈 Gaya: Manual Ceria ⇄',
+      kioskCiqTitle: '1. Jemput Kerja · CIQ JB / Kempas',
+      kioskCiqSub: '🇲🇾 JB Sentral CIQ / Kempas ➔ 🚗 上车点上车',
+      kioskMomTitle: '2. Jemput Ibu Tuisyen',
+      kioskMomSub: '👩🏻 Ambil Ibu di Pusat Tuisyen ➔ 🚗 上车点上车',
+      kioskActive: '👉 TUGAS AKTIF',
+      kioskSwitch: 'TEKAN TUKAR 👉',
+      stepPanelTitle: '🕒 Status Jemput · Kiraan ETA Automatik',
+      prevBtn: '⬅️ Langkah Sebelum',
+      resetBtn: '🔄 Set Semula',
+      mapPanelTitle: '🗺️ Peta Lokasi & Mesej Pantas',
+      ergoTag: '📍 Google Maps',
+      waBtnRight: '👉 HANTAR SEKARANG',
+      voiceBtnText: '🔊 Sebut Status & Waktu Tiba (Suara Automatik)',
+      voiceBtnRight: '🔊 SEBUT 👉',
+      lockedBadge: '🔒 SELESAI · DIKUNCI',
+      pulseBadge: '✨ TEKAN SEKARANG 👈',
+      readyBadge: '🟢 TEKAN HANTAR',
+      cautionBadge: '🟠 AWAS TRAFIK',
+      vuCiq: ['🏢 Kerja SG', '🇸🇬 CIQ SG', '🚌 Bas Tambak', '🇲🇾 CIQ Malaysia', '🚗 Tempat Ambil'],
+      vuMom: ['🏡 1044 TUTA', '🚗 Gerak ke Tuisyen', '🏫 Ambil Ibu', '🏡 Balik 1044 TUTA']
+    }
+  };
+
+  // 6 Colorful Status Steps (Step 2 is Leave-Home trigger, Step 3 reverted to "🚌 3. 已过新加坡关卡，正在上巴士")
+  const STEPS = [
+    {
+      step: 1,
+      emoji: '💼',
+      theme: 'm-sky',
+      sem: 'ok',
+      etaMin: 55,
+      mood_zh: 'STEP 1 · 放工出发',
+      mood_en: 'STEP 1 · Leaving Office',
+      mood_bm: 'STEP 1 · Habis Kerja',
+      title_zh: '1. 我刚放工，准备去关卡',
+      title_en: '1. Just Left Office, Heading to Checkpoint',
+      title_bm: '1. Baru Habis Kerja, Gerak ke Kastam'
+    },
+    {
+      step: 2,
+      emoji: '🇸🇬',
+      theme: 'm-emerald',
+      sem: 'ok',
+      etaMin: 30,
+      mood_zh: 'STEP 2 · 爸妈出门信号',
+      mood_en: 'STEP 2 · Leave Home Signal',
+      mood_bm: 'STEP 2 · Isyarat Keluar',
+      title_zh: '2. 刚到新加坡关卡！爸妈可以从 1044 TUTA 出门啦',
+      title_en: '2. Just Reached SG Checkpoint! Dad & Mom Can Leave 1044 TUTA Now',
+      title_bm: '2. Baru Sampai CIQ SG! Ayah & Ibu Boleh Keluar Dari 1044 TUTA'
+    },
+    {
+      step: 3,
+      emoji: '🚌',
+      theme: 'm-emerald',
+      sem: 'ok',
+      etaMin: 20,
+      mood_zh: 'STEP 3 · 巴士过长堤',
+      mood_en: 'STEP 3 · Crossing Causeway',
+      mood_bm: 'STEP 3 · Atas Bas',
+      title_zh: '3. 已过新加坡关卡，正在上巴士',
+      title_en: '3. Cleared SG Checkpoint, Boarding Bus',
+      title_bm: '3. Lepas CIQ SG, Sedang Naik Bas'
+    },
+    {
+      step: 4,
+      emoji: '🌉',
+      theme: 'm-amber',
+      sem: 'warn',
+      etaMin: 35,
+      mood_zh: 'STEP 4 · 路况提醒',
+      mood_en: 'STEP 4 · Traffic Alert',
+      mood_bm: 'STEP 4 · Info Trafik',
+      title_zh: '4. 长堤有点塞车，爸妈慢慢开不用急',
+      title_en: '4. Causeway Traffic Jam — Drive Slowly, No Rush',
+      title_bm: '4. Tambak Johor Sesak — Pandu Perlahan, Jangan Gesa'
+    },
+    {
+      step: 5,
+      emoji: '🇲🇾',
+      theme: 'm-rose',
+      sem: 'ok',
+      etaMin: 8,
+      mood_zh: 'STEP 5 · 🇲🇾 马来西亚关卡',
+      mood_en: 'STEP 5 · 🇲🇾 Malaysia CIQ',
+      mood_bm: 'STEP 5 · 🇲🇾 CIQ Malaysia',
+      title_zh: '5. 已到马来西亚关卡 (新山 CIQ) 准备出关，去上车点汇合',
+      title_en: '5. Reached Malaysia Checkpoint (JB CIQ), Heading to Pickup Point',
+      title_bm: '5. Dah Masuk CIQ JB, Menuju ke Tempat Ambil'
+    },
+    {
+      step: 6,
+      emoji: '🚗',
+      theme: 'm-violet',
+      sem: 'ok',
+      etaMin: 1,
+      mood_zh: 'STEP 6 · 抵达上车点',
+      mood_en: 'STEP 6 · At Pickup Point',
+      mood_bm: 'STEP 6 · Sampai Tempat Ambil',
+      title_zh: '6. 抵达上车点，即将开门上车',
+      title_en: '6. Reached Pickup Point, Getting In the Car Now',
+      title_bm: '6. Dah Sampai Tempat Ambil, Nak Naik Kereta Sekarang'
+    }
+  ];
+
+
+  // Parents Separated Response Steps (Strictly separated: 1. 收到 -> 2. 准备出门 -> 3. 已在路上 -> 4. 已到上车点)
+  const PARENT_STEPS = [
+    {
+      step: 1,
+      emoji: '👌',
+      theme: 'm-sky',
+      etaMin: 25,
+      step_zh: '爸妈回应 1 · 收到通知',
+      step_en: 'Parent Step 1 · Got It',
+      step_bm: 'Langkah IbuBapa 1 · Faham',
+      title_zh: '1. 收到（爸妈已看到通知，知道了）',
+      title_en: '1. Got It (Dad & Mom Saw the Notification)',
+      title_bm: '1. Terima (Ayah & Ibu Dah Baca Notifikasi)',
+      map_zh: '🏡 1044 TUTA (已收到)',
+      map_en: '🏡 1044 TUTA (Seen)'
+    },
+    {
+      step: 2,
+      emoji: '🔑',
+      theme: 'm-amber',
+      etaMin: 18,
+      step_zh: '爸妈回应 2 · 准备出门',
+      step_en: 'Parent Step 2 · Getting Ready',
+      step_bm: 'Langkah IbuBapa 2 · Sedia Keluar',
+      title_zh: '2. 准备出门（拿车钥匙、穿鞋准备出发）',
+      title_en: '2. Getting Ready to Leave (Grabbing Keys at 1044 TUTA)',
+      title_bm: '2. Sedia Nak Keluar (Ambil Kunci Kereta di 1044 TUTA)',
+      map_zh: '🔑 1044 TUTA (准备出门)',
+      map_en: '🔑 1044 TUTA (Getting Ready)'
+    },
+    {
+      step: 3,
+      emoji: '🚗',
+      theme: 'm-emerald',
+      etaMin: 12,
+      step_zh: '爸妈回应 3 · 已在路上',
+      step_en: 'Parent Step 3 · On the Way',
+      step_bm: 'Langkah IbuBapa 3 · Dalam Perjalanan',
+      title_zh: '3. 已在路上（已从 1044 TUTA 开车出来，正在路上）',
+      title_en: '3. On the Way (Left 1044 TUTA, Driving to Pickup Point)',
+      title_bm: '3. Dalam Perjalanan (Dah Keluar 1044 TUTA ke Tempat Ambil)',
+      map_zh: '🚗 已在路上 (正往上车点开)',
+      map_en: '🚗 On the Road to Pickup'
+    },
+    {
+      step: 4,
+      emoji: '📍',
+      theme: 'm-violet',
+      etaMin: 1,
+      step_zh: '爸妈回应 4 · 已到上车点',
+      step_en: 'Parent Step 4 · At Pickup Point',
+      step_bm: 'Langkah IbuBapa 4 · Sampai Tempat Ambil',
+      title_zh: '4. 已到上车点等你（车已停好，出来就能上车）',
+      title_en: '4. Arrived at Pickup Point Waiting for You',
+      title_bm: '4. Dah Sampai Tempat Ambil Sedang Tunggu',
+      map_zh: '📍 已到上车点等候',
+      map_en: '📍 Waiting at Pickup Point'
+    }
+  ];
+
+  function triggerParentStep(pNum) {
+    // Allow bidirectional switching (both previous steps and next steps can be clicked to switch!)
+    const ps = PARENT_STEPS.find(x => x.step === pNum);
+    if (!ps) return;
+    state.parentStep = pNum;
+    renderAll();
+    const lang = getActiveLang();
+    const clock = calcClockTime(ps.etaMin);
+    const title = ps['title_' + lang];
+    const msg = lang === 'en'
+      ? `👨🏻👩🏻 [Dad & Mom Reply] ${title} (Est. at Pickup Point: ${clock})`
+      : `👨🏻👩🏻 【爸妈回应弹窗】${title}（预计 ${clock} 到上车点）`;
+    speakText(msg, lang);
+    pushSystemNotification('1044 TUTA 爸妈回应', msg);
+    showToast(msg);
+  }
+
+  function prevParentStep() {
+    if (state.parentStep <= 1) {
+      showToast('已经在第 1 步（收到）啦！');
+      return;
+    }
+    state.parentStep -= 1;
+    renderAll();
+    const lang = getActiveLang();
+    const ps = PARENT_STEPS.find(x => x.step === state.parentStep) || PARENT_STEPS[0];
+    showToast(`⬅️ 爸妈回应已退回：${ps['title_' + lang]}`);
+  }
+
+  function resetParentProgress() {
+    state.parentStep = 1;
+    renderAll();
+    showToast('🔄 爸妈回应状态已重置回「1. 👌 收到」');
+  }
+
+  const LOCATIONS = [
+    { q: 'JB+Sentral+Johor+Bahru', zh: '📍 新山关卡 JB Sentral', en: '📍 JB Sentral CIQ', bm: '📍 CIQ JB Sentral' },
+    { q: 'Kempas+Baru+Station+Johor+Bahru', zh: '📍 Kempas Baru 站', en: '📍 Kempas Baru Stn', bm: '📍 Stesen Kempas Baru' },
+    { q: 'Johor+Bahru+Malaysia', zh: '🏫 妈妈补习中心', en: '🏫 Mom Tuition Center', bm: '🏫 Pusat Tuisyen Ibu' },
+    { q: 'Sutera+Mall+Johor+Bahru', zh: '🛒 顺路买菜/打包', en: '🛒 Grocery / Tapau Stop', bm: '🛒 Singgah Beli Barang' },
+    { q: 'Skudai+Johor+Bahru', zh: '🏡 1044 TUTA', en: '🏡 1044 TUTA (Home)', bm: '🏡 1044 TUTA (Rumah)' }
+  ];
+
+  const QUICK_PILLS = [
+    { etaMin: 5,  zh: '💬 "我到天桥下了"', en: '💬 "I am under the overhead bridge now"', bm: '💬 "Saya dah di bawah jejantas"' },
+    { etaMin: 25, zh: '💬 "爸妈慢慢开不用急"', en: '💬 "Drive slowly Dad & Mom, no rush"', bm: '💬 "Pandu perlahan Ayah & Ibu"' },
+    { etaMin: 18, zh: '💬 "已在老地方等了"', en: '💬 "Waiting at the usual pickup spot"', bm: '💬 "Sedang tunggu di tempat biasa"' }
+  ];
+
+  function getActiveLang() {
+    if (state.roleIdx === 1) return 'en'; // Dad always forces 100% English!
+    return ['zh', 'en', 'bm'][state.langIdx];
+  }
+
+  function calcClockTime(offsetMin) {
+    const now = new Date();
+    const target = new Date(now.getTime() + offsetMin * 60000);
+    let hrs = target.getHours();
+    const mins = String(target.getMinutes()).padStart(2, '0');
+    const ampm = hrs >= 12 ? 'PM' : 'AM';
+    hrs = hrs % 12;
+    if (hrs === 0) hrs = 12;
+    return `${hrs}:${mins} ${ampm}`;
+  }
+
+  function getAutoEtaMin(baseMin) {
+    const locOffsets = [0, 8, -5, 5, 0];
+    const delta = locOffsets[state.activeLocIdx] || 0;
+    return Math.max(1, baseMin + delta);
+  }
+
+  function formatEtaBadge(etaMin, lang) {
+    const finalMin = getAutoEtaMin(etaMin);
+    const clock = calcClockTime(finalMin);
+    if (lang === 'en') return `🕒 Auto ETA: ${clock} (~${finalMin} mins)`;
+    if (lang === 'bm') return `🕒 Auto ETA: ${clock} (~${finalMin} min)`;
+    return `🕒 自动计算 ETA：预计 ${clock} 抵达 (~${finalMin} 分钟)`;
+  }
+
+  function showToast(msg) {
+    const box = document.getElementById('toastBox');
+    box.innerHTML = `<span>✨</span><span>${msg}</span>`;
+    box.style.display = 'flex';
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => { box.style.display = 'none'; }, 3200);
+  }
+
+  function speakText(text, langCode) {
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = langCode === 'en' ? 'en-US' : (langCode === 'bm' ? 'ms-MY' : 'zh-CN');
+        u.rate = 1.0;
+        window.speechSynthesis.speak(u);
+      }
+    } catch (e) {}
+  }
+
+  function pushSystemNotification(title, body) {
+    try {
+      if ('vibrate' in navigator) navigator.vibrate([180, 80, 180]);
+      if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+          new Notification(title, { body });
+        } else if (Notification.permission !== 'denied') {
+          Notification.requestPermission().then(p => {
+            if (p === 'granted') new Notification(title, { body });
+          });
+        }
+      }
+    } catch (e) {}
+  }
+
+  window.addEventListener('offline', () => {
+    state.isOffline = true;
+    renderAll();
+    const lang = getActiveLang();
+    const alertMsg = lang === 'en'
+      ? '⚠️ Signal Lost at Checkpoint! Offline Queue & SMS Fallback Activated.'
+      : '⚠️ 关卡现在没线！你照常按，一有线会自动发给爸妈';
+    speakText(alertMsg, lang);
+    pushSystemNotification('⚠️ 1044 TUTA 关卡掉线提醒', alertMsg);
+    showToast(alertMsg);
+  });
+
+  window.addEventListener('online', () => {
+    if (state.isOffline) {
+      state.isOffline = false;
+      flushOfflineQueue();
+      renderAll();
+    }
+  });
+
+  function toggleMemberOnline(who) {
+    if (who === 'son') {
+      toggleOfflineSim();
+      return;
+    }
+    state.memberOnline[who] = !state.memberOnline[who];
+    renderAll();
+    const lang = getActiveLang();
+    const nameMap = { dad: '👨🏻 Dad', mom: lang === 'en' ? '👩🏻 Mom' : '👩🏻 妈妈' };
+    const isOn = state.memberOnline[who];
+    showToast(lang === 'en'
+      ? `${nameMap[who]} is now ${isOn ? '🟢 Online' : '📴 Offline (No Signal)'}`
+      : `${nameMap[who]} 状态已切换为：${isOn ? '🟢 手机有线' : '📴 暂时没线'}`);
+  }
+
+  function toggleOfflineSim() {
+    state.isOffline = !state.isOffline;
+    const lang = getActiveLang();
+    if (state.isOffline) {
+      const alertMsg = lang === 'en'
+        ? '⚠️ [Checkpoint Offline Alert] Signal dropped! Any Status you tap is saved offline and auto-sent once reconnected.'
+        : '⚠️ 关卡现在没线！照常按按钮就行，一有线会自动发给爸妈';
+      renderAll();
+      speakText(alertMsg, lang);
+      pushSystemNotification('⚠️ 1044 TUTA 关卡掉线提醒', alertMsg);
+      showToast(alertMsg);
+    } else {
+      flushOfflineQueue();
+      renderAll();
+    }
+  }
+
+  function flushOfflineQueue() {
+    const lang = getActiveLang();
+    if (state.offlineQueue.length > 0) {
+      const lastItem = state.offlineQueue[state.offlineQueue.length - 1];
+      const count = state.offlineQueue.length;
+      state.offlineQueue = [];
+      const msg = lang === 'en'
+        ? `🟢 Signal Restored! Auto-sent ${count} queued status update(s): ${lastItem}`
+        : `🟢 手机有线啦！刚才没网时按的「${lastItem}」已经自动发给爸妈了！`;
+      speakText(msg, lang);
+      pushSystemNotification('🟢 1044 TUTA 信号恢复自动补发', msg);
+      showToast(msg);
+    } else {
+      showToast(lang === 'en' ? '🟢 Network Signal Online!' : '🟢 手机恢复有线啦！');
+    }
+  }
+
+  function sendZeroDataSMS() {
+    const lang = getActiveLang();
+    const s = STEPS.find(x => x.step === state.activeStep) || STEPS[1];
+    const autoMin = getAutoEtaMin(state.lastEtaMin);
+    const clock = calcClockTime(autoMin);
+    const smsBody = lang === 'en'
+      ? `[1044 TUTA] ${s.title_en} | Est. Arrival ${clock} (~${autoMin}m)`
+      : `【1044 TUTA】${s.title_zh} | 预计 ${clock} 抵达 (~${autoMin}分钟)`;
+    showToast(lang === 'en'
+      ? `📩 Opening Mobile SMS (0 Data Needed): "${smsBody}"`
+      : `📩 正在拉起手机原生 SMS 短信（0 流量直发爸妈）：「${smsBody}」`);
+    try {
+      window.location.href = `sms:?body=${encodeURIComponent(smsBody)}`;
+    } catch (e) {}
+  }
+
+  function toggleCancelPickup() {
+    state.isCancelled = !state.isCancelled;
+    const lang = getActiveLang();
+    if (state.isCancelled) {
+      const msgZh = '🔴 【紧急通知】临时有事 / 取消接送！爸妈今天不用从 1044 TUTA 出门啦';
+      const msgEn = '🔴 [URGENT] Pickup Cancelled / Urgent Matter! Dad & Mom No Need to Leave 1044 TUTA Today';
+      const msgBm = '🔴 [PENTING] Jemput Dibatalkan / Ada Hal Kecemasan! Ayah & Ibu Tak Perlu Keluar 1044 TUTA';
+      const msg = lang === 'en' ? msgEn : (lang === 'bm' ? msgBm : msgZh);
+      state.lastCustomMsg = msg;
+      renderAll();
+      speakText(msg, lang);
+      pushSystemNotification('1044 TUTA 紧急通知', msg);
+      showToast(msg);
+    } else {
+      state.lastCustomMsg = null;
+      renderAll();
+      const s = STEPS.find(x => x.step === state.activeStep) || STEPS[1];
+      const msg = s['title_' + lang];
+      speakText(msg, lang);
+      showToast(lang === 'en' ? '🟢 Pickup Resumed!' : '🟢 已恢复正常接送状态！');
+    }
+  }
+
+  function cycleRole() {
+    state.roleIdx = (state.roleIdx + 1) % ROLES.length;
+    if (state.roleIdx === 1) {
+      // Dad mode: auto 100% English + immediate voice readout
+      renderAll();
+      const s = STEPS.find(x => x.step === state.activeStep) || STEPS[1];
+      const clock = calcClockTime(state.lastEtaMin);
+      const speech = `1044 TUTA English Mode for Dad. ${s.title_en}. Estimated arrival at ${clock}.`;
+      speakText(speech, 'en');
+      showToast(`👨🏻 Switched to Dad Mode (100% English + Voice Readout)`);
+    } else {
+      renderAll();
+      const rName = ROLES[state.roleIdx][getActiveLang()];
+      showToast(`${rName}`);
+    }
+  }
+
+  function cycleLang() {
+    if (state.roleIdx === 1) {
+      state.roleIdx = 0; // Unlock from Dad auto-EN if user manually cycles language
+    }
+    state.langIdx = (state.langIdx + 1) % 3;
+    renderAll();
+    showToast(`🌐 ${I18N[getActiveLang()].langBtn}`);
+  }
+
+  function cycleStyle() {
+    state.styleIdx = (state.styleIdx + 1) % 2;
+    document.body.classList.toggle('manual-mode', state.styleIdx === 1);
+    renderAll();
+  }
+
+  function selectMission(m) {
+    state.mission = m;
+    state.lastCustomMsg = null;
+    if (m === 'mom') {
+      state.activeStep = 4; // Step 5 becomes pulsing next step!
+      state.activeLocIdx = 2; // Mom Tuition Center
+      state.lastEtaMin = 15;
+    } else {
+      state.activeStep = 2; // Step 3 pulsing next step!
+      state.activeLocIdx = 0; // JB Sentral
+      state.lastEtaMin = 20;
+    }
+    updateMapIframe();
+    renderAll();
+    const lang = getActiveLang();
+    showToast(m === 'mom'
+      ? (lang === 'en' ? '🏫 Switched to Mom Tuition Pickup Mission' : '🏫 已切换至：2. 妈妈补习接送模式')
+      : (lang === 'en' ? '🚗 Switched to CIQ Work Pickup Mission' : '🚗 已切换至：1. 放工接送模式'));
+  }
+
+  function triggerStep(stepNum) {
+    // Allow bidirectional switching (both previous steps and next steps can be clicked to switch!)
+    const s = STEPS.find(x => x.step === stepNum);
+    if (!s) return;
+    state.isCancelled = false;
+    state.activeStep = stepNum;
+    state.lastEtaMin = s.etaMin;
+    state.lastCustomMsg = null;
+    renderAll();
+    const lang = getActiveLang();
+    const clock = calcClockTime(s.etaMin);
+    const title = s['title_' + lang];
+    if (state.isOffline) {
+      state.offlineQueue.push(`${title} (${clock})`);
+      renderAll();
+      const qMsg = lang === 'en'
+        ? `📦 [Offline Saved] "${title}" queued (${state.offlineQueue.length} pending). Will auto-send when signal returns!`
+        : `📌 关卡没线，已先帮你记下「${title}」，一有线马上自动发给爸妈！`;
+      speakText(qMsg, lang);
+      showToast(qMsg);
+      return;
+    }
+    speakText(`${title}. ${formatEtaBadge(s.etaMin, lang)}`, lang);
+    pushSystemNotification('1044 TUTA 状态更新', `${title} (${formatEtaBadge(s.etaMin, lang)})`);
+    showToast(`🔔 已弹窗通知爸妈：${title} (${clock})`);
+  }
+
+  function prevStep() {
+    if (state.activeStep <= 1) {
+      const lang = getActiveLang();
+      showToast(lang === 'en' ? 'Already at Step 1!' : '已经在第 1 步啦！');
+      return;
+    }
+    state.activeStep = state.activeStep - 1;
+    const s = STEPS.find(x => x.step === state.activeStep) || STEPS[0];
+    state.lastEtaMin = s.etaMin;
+    state.lastCustomMsg = null;
+    renderAll();
+    const lang = getActiveLang();
+    const title = s['title_' + lang];
+    showToast(lang === 'en' ? `⬅️ Reverted to Step ${state.activeStep}: ${title}` : `⬅️ 已回到上一步 Status：${title}`);
+  }
+
+  function resetProgress() {
+    state.activeStep = 1;
+    state.lastCustomMsg = null;
+    state.lastEtaMin = STEPS[0].etaMin;
+    renderAll();
+    const lang = getActiveLang();
+    showToast(lang === 'en' ? '🔄 Progress reset to Step 1!' : '🔄 进度已重置回第 1 步，可重新点按测试！');
+  }
+
+  function selectLocation(idx) {
+    state.activeLocIdx = idx;
+    updateMapIframe();
+    renderAll();
+  }
+
+  function updateMapIframe() {
+    const loc = LOCATIONS[state.activeLocIdx] || LOCATIONS[0];
+    const iframe = document.getElementById('mapIframe');
+    if (iframe) {
+      iframe.src = `https://maps.google.com/maps?q=${loc.q}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+    }
+  }
+
+  function triggerQuickPill(idx) {
+    const p = QUICK_PILLS[idx];
+    if (!p) return;
+    const lang = getActiveLang();
+    state.lastEtaMin = p.etaMin;
+    state.lastCustomMsg = p[lang];
+    renderAll();
+    speakText(p[lang], lang);
+    showToast(`💬 ${p[lang]} (${calcClockTime(p.etaMin)})`);
+  }
+
+  function triggerWhatsApp() {
+    const lang = getActiveLang();
+    const s = STEPS.find(x => x.step === state.activeStep) || STEPS[1];
+    const clock = calcClockTime(state.lastEtaMin);
+    const msg = state.lastCustomMsg || s['title_' + lang];
+    showToast(lang === 'en'
+      ? `📲 Ready to send WhatsApp: "${msg} | Est. Arrival ${clock} at 1044 TUTA"`
+      : `📲 已生成 WhatsApp 消息：「${msg} | 预计 ${clock} 抵达 1044 TUTA」`);
+  }
+
+  function speakCurrentStatus() {
+    const lang = getActiveLang();
+    const s = STEPS.find(x => x.step === state.activeStep) || STEPS[1];
+    const msg = state.lastCustomMsg || s['title_' + lang];
+    speakText(`${msg}. ${formatEtaBadge(state.lastEtaMin, lang)}`, lang);
+    showToast(`🔊 ${msg} (${calcClockTime(state.lastEtaMin)})`);
+  }
+
+  function renderAll() {
+    const lang = getActiveLang();
+    const t = I18N[lang];
+    const roleObj = ROLES[state.roleIdx];
+
+    document.getElementById('brandTitle').textContent = t.brandTitle;
+    document.getElementById('brandSub').textContent = t.brandSub;
+
+    const rBtn = document.getElementById('roleCycleBtn');
+    rBtn.textContent = roleObj[lang];
+    rBtn.className = 'cycle-btn ' + roleObj.cls;
+
+    document.getElementById('langCycleBtn').textContent = t.langBtn;
+    document.getElementById('styleCycleBtn').textContent = state.styleIdx === 0 ? t.styleCity : t.styleManual;
+
+    // Top Notification & Mandatory Clock ETA
+    const curStepObj = STEPS.find(x => x.step === state.activeStep) || STEPS[1];
+    const notifyBar = document.getElementById('sysNotifyBar');
+    notifyBar.style.borderLeftColor = curStepObj.sem === 'warn' ? '#F59E0B' : '#10B981';
+
+    document.getElementById('notifyEmoji').textContent = curStepObj.emoji;
+    const headline = state.lastCustomMsg ? state.lastCustomMsg : curStepObj['title_' + lang];
+    const prefix = lang === 'en' ? '[1044 LIVE] ' : (lang === 'bm' ? '[SIARAN 1044] ' : '【1044 实时广播】');
+    document.getElementById('notifyTitle').textContent = prefix + headline;
+
+    const locName = LOCATIONS[state.activeLocIdx][lang];
+    document.getElementById('notifySub').textContent = lang === 'en'
+      ? `${locName}  |  🔊 Role: ${roleObj.en.replace('👤 Role: ', '')}  |  Pickup: 🚗 Pickup Point`
+      : (lang === 'bm'
+        ? `${locName}  |  🔊 Peranan Aktif  |  Lokasi: 🚗 Tempat Ambil`
+        : `${locName}  |  🔊 爸妈端已同步语音与具体抵达钟点  |  汇合点：🚗 上车点上车`);
+
+    const etaBadge = document.getElementById('etaBadge');
+    etaBadge.textContent = formatEtaBadge(state.lastEtaMin, lang);
+    etaBadge.style.background = curStepObj.sem === 'warn' ? '#F59E0B' : '#10B981';
+
+
+    // Update Top Pop-up Notification Banner & Cancel Button
+    const popupBanner = document.getElementById('popupBanner');
+    const popupTag = document.getElementById('popupTag');
+    const popupMsg = document.getElementById('popupMsg');
+    const popupEta = document.getElementById('popupEta');
+    const popupBell = document.getElementById('popupBell');
+    const cancelBtn = document.getElementById('cancelPickupBtn');
+    const cancelBtnText = document.getElementById('cancelBtnText');
+    const cancelBtnPill = document.getElementById('cancelBtnPill');
+
+    if (state.isCancelled) {
+      popupBanner.classList.add('cancelled-mode');
+      popupBell.textContent = '🚨';
+      popupTag.textContent = lang === 'en'
+        ? '🚨 URGENT POP-UP SENT TO DAD & MOM (NO PICKUP NEEDED)'
+        : '🚨 紧急弹窗已推送至爸妈手机（今天不用出门接送）';
+      popupMsg.textContent = headline;
+      popupEta.textContent = lang === 'en'
+        ? '🛑 ETA Cancelled · Stay Home at 1044 TUTA'
+        : '🛑 自动计算 ETA：已暂停接送 · 爸妈请留在 1044 TUTA 休息';
+      cancelBtn.classList.add('is-cancelled');
+      cancelBtnText.textContent = lang === 'en'
+        ? '🚨 PICKUP CANCELLED (Dad & Mom Notified Not to Leave)'
+        : '🚨 已发出「取消接送 / 临时有事」通知（爸妈不用出门）';
+      cancelBtnPill.textContent = lang === 'en' ? '🟢 Tap to Resume' : '🟢 点击恢复正常接送';
+    } else {
+      popupBanner.classList.remove('cancelled-mode');
+      popupBell.textContent = '🔔';
+      popupTag.textContent = lang === 'en'
+        ? '📲 AUTO POP-UP NOTIFICATION (Synced to Dad & Mom + Voice)'
+        : '📲 状态更新自动弹窗通知 (已同步爸妈手机 + 语音播报)';
+      popupMsg.textContent = headline;
+      popupEta.textContent = formatEtaBadge(state.lastEtaMin, lang);
+      cancelBtn.classList.remove('is-cancelled');
+      cancelBtnText.textContent = lang === 'en'
+        ? '🔴 Cancel Pickup / Urgent Matter (Tell Dad & Mom Stay Home)'
+        : (lang === 'bm'
+          ? '🔴 Batal Jemput / Ada Hal Kecemasan (Ayah & Ibu Tak Perlu Keluar)'
+          : '🔴 临时有事 / 取消接送（通知爸妈不用出门）');
+      cancelBtnPill.textContent = lang === 'en' ? 'Tap to Cancel 👉' : (lang === 'bm' ? 'Tekan Batal 👉' : '点击取消接送 👉');
+    }
+
+    const radarRouteText = document.getElementById('radarRouteText');
+    if (radarRouteText) {
+      radarRouteText.textContent = lang === 'en'
+        ? `🛰️ Live Route: ${locName} ➔ 🚗 上车点上车 (${formatEtaBadge(state.lastEtaMin, lang)})`
+        : `🛰️ 实时路线：${locName} ➔ 🚗 上车点上车（${formatEtaBadge(state.lastEtaMin, lang)}）`;
+    }
+
+
+
+    // Update 3-Person Live Online Status Board (Son / Dad / Mom)
+    state.memberOnline.son = !state.isOffline;
+    const presSon = document.getElementById('presSon');
+    const presDad = document.getElementById('presDad');
+    const presMom = document.getElementById('presMom');
+    if (presSon && presDad && presMom) {
+      // Son
+      presSon.className = 'presence-pill ' + (state.memberOnline.son ? '' : 'p-offline');
+      document.getElementById('presSonDot').textContent = state.memberOnline.son
+        ? (lang === 'en' ? '🟢 Online' : '🟢 有线')
+        : (lang === 'en' ? '🟠 No Signal' : '🟠 关卡没线');
+      const stepShort = state.activeStep === 1 ? (lang === 'en' ? 'SG Office' : '刚放工')
+        : (state.activeStep === 2 ? (lang === 'en' ? 'SG CIQ' : '新加坡关卡')
+        : (state.activeStep <= 4 ? (lang === 'en' ? 'On Bus' : '巴士过长堤')
+        : (state.activeStep === 5 ? (lang === 'en' ? 'MY CIQ' : '马来西亚关卡') : (lang === 'en' ? 'Pickup Pt' : '上车点'))));
+      document.getElementById('presSonSub').textContent = state.memberOnline.son
+        ? `📍 ${stepShort} (${lang === 'en' ? 'Live' : '实时'})`
+        : (lang === 'en' ? `Last: ${stepShort}` : `最后在: ${stepShort}`);
+
+      // Dad
+      presDad.className = 'presence-pill ' + (state.memberOnline.dad ? '' : 'p-offline');
+      document.getElementById('presDadDot').textContent = state.memberOnline.dad
+        ? (lang === 'en' ? '🟢 Online' : '🟢 有线')
+        : (lang === 'en' ? '🟠 Offline' : '🟠 没线');
+      document.getElementById('presDadSub').textContent = state.memberOnline.dad
+        ? (lang === 'en' ? '👀 Alert Seen (EN)' : '👀 已收通知 (1044)')
+        : (lang === 'en' ? 'Last seen 2m ago' : '2分钟前在线');
+
+      // Mom
+      presMom.className = 'presence-pill ' + (state.memberOnline.mom ? '' : 'p-offline');
+      document.getElementById('presMomDot').textContent = state.memberOnline.mom
+        ? (lang === 'en' ? '🟢 Online' : '🟢 有线')
+        : (lang === 'en' ? '🟠 Offline' : '🟠 没线');
+      document.getElementById('presMomSub').textContent = state.memberOnline.mom
+        ? (state.mission === 'mom'
+            ? (lang === 'en' ? '🏫 At Tuition' : '🏫 在补习中心')
+            : (lang === 'en' ? '🏡 At 1044 TUTA' : '🏡 在 1044 TUTA'))
+        : (lang === 'en' ? 'Last seen 3m ago' : '3分钟前在线');
+    }
+
+    // Update Network Online/Offline Button & Checkpoint Offline Alert Banner
+    const netBtn = document.getElementById('netCycleBtn');
+    const offlineBox = document.getElementById('offlineAlertBox');
+    const radarLiveTag = document.getElementById('radarLiveTag');
+    if (netBtn) {
+      if (state.isOffline) {
+        netBtn.className = 'net-cycle-btn offline';
+        netBtn.textContent = lang === 'en' ? '📴 Signal: OFFLINE ⚠️ ⇄' : '📴 网络: 关卡没线 ⚠️ ⇄';
+      } else {
+        netBtn.className = 'net-cycle-btn';
+        netBtn.textContent = lang === 'en' ? '📶 Signal: ONLINE 🟢 ⇄' : '📶 网络: 有线 🟢 ⇄';
+      }
+    }
+    if (offlineBox) {
+      offlineBox.classList.toggle('show', state.isOffline);
+      document.getElementById('offlineQueueBadge').textContent = lang === 'en'
+        ? `📌 Saved: ${state.offlineQueue.length} (Auto-send)`
+        : `📌 已记下: ${state.offlineQueue.length} 条 (有线自动发)`;
+      document.getElementById('offlineTitle').textContent = lang === 'en'
+        ? '⚠️ No Signal at Checkpoint Right Now!'
+        : '⚠️ 关卡现在没线（没网络）！';
+      document.getElementById('offlineDesc').innerHTML = lang === 'en'
+        ? `• 🕺 <b>Son</b>: Just tap as usual! Phone saved it and will auto-send once signal is back.<br>• 👨🏻👩🏻 <b>Dad & Mom Don't Worry</b>: Checkpoint often has no signal. Son will still arrive around <b>${calcClockTime(getAutoEtaMin(state.lastEtaMin))}</b> as planned!`
+        : `• 🕺 <b>儿子</b>：你照常按按钮就行，手机已经帮你记住了，一有线就会自动发给爸妈！<br>• 👨🏻👩🏻 <b>爸妈不用担心</b>：关卡里面经常没线，儿子预计 <b>${calcClockTime(getAutoEtaMin(state.lastEtaMin))}</b> 照常出来，按时间去接就可以啦！`;
+      document.getElementById('smsFallbackBtn').textContent = lang === 'en'
+        ? '📩 No Internet? Tap Here to Send Normal Phone SMS to Dad & Mom 👉'
+        : '📩 没网也能发：点这里发普通手机信息 (SMS) 给爸妈 👉';
+    }
+    if (radarLiveTag) {
+      radarLiveTag.style.background = state.isOffline ? '#EF4444' : '#10B981';
+      radarLiveTag.textContent = state.isOffline
+        ? (lang === 'en' ? '📴 OFFLINE RADAR ACTIVE' : '📴 关卡没线 · 路线图照常显示')
+        : (lang === 'en' ? '🟢 GPS & MAPS LIVE' : '🟢 GPS 实时在线');
+    }
+
+    // Render Offline Vector Route Radar Nodes (5 nodes for CIQ, 4 for Mom)
+    const radarNodesEl = document.getElementById('offlineRadarNodes');
+    if (radarNodesEl) {
+      const nodes = state.mission === 'mom'
+        ? [
+            { icon: '🏡', label: lang === 'en' ? '1044 TUTA' : '1044出发', stepReq: 1 },
+            { icon: '🚗', label: lang === 'en' ? 'On Way' : '前往补习', stepReq: 2 },
+            { icon: '🏫', label: lang === 'en' ? 'Tuition' : '补习中心', stepReq: 4 },
+            { icon: '🚗', label: lang === 'en' ? 'Pickup Point' : '上车点上车', stepReq: 6 }
+          ]
+        : [
+            { icon: '💼', label: lang === 'en' ? 'SG Office' : '新加坡放工', stepReq: 1 },
+            { icon: '🇸🇬', label: lang === 'en' ? 'SG CIQ' : '新加坡关卡', stepReq: 2 },
+            { icon: '🚌', label: lang === 'en' ? 'Causeway' : '巴士过长堤', stepReq: 3 },
+            { icon: '🇲🇾', label: lang === 'en' ? 'MY CIQ' : '马来西亚关卡', stepReq: 5 },
+            { icon: '🚗', label: lang === 'en' ? 'Pickup Point' : '上车点上车', stepReq: 6 }
+          ];
+      const htmlParts = [];
+      nodes.forEach((n, idx) => {
+        const isDone = state.activeStep > n.stepReq;
+        const isCurr = state.activeStep === n.stepReq || (idx === 2 && state.activeStep === 4);
+        const cls = isCurr ? 'svg-node curr' : (isDone ? 'svg-node done' : 'svg-node');
+        htmlParts.push(`<div class="${cls}"><div class="n-dot">${n.icon}</div><span>${n.label}</span></div>`);
+        if (idx < nodes.length - 1) {
+          htmlParts.push(`<div class="svg-track-line ${isDone ? 'done' : ''}"></div>`);
+        }
+      });
+      radarNodesEl.innerHTML = htmlParts.join('');
+    }
+
+    // VU Journey Progress Bar
+    const vuStages = state.mission === 'mom' ? t.vuMom : t.vuCiq;
+    const vuStageIdx = state.mission === 'mom' ? (state.activeStep <= 1 ? 0 : (state.activeStep === 2 ? 1 : (state.activeStep <= 5 ? 2 : 3))) : (state.activeStep <= 1 ? 0 : (state.activeStep === 2 ? 1 : (state.activeStep <= 4 ? 2 : (state.activeStep === 5 ? 3 : 4))));
+    const vuHtml = [];
+    vuStages.forEach((label, idx) => {
+      const cls = idx < vuStageIdx ? 'vu-step done' : (idx === vuStageIdx ? 'vu-step curr' : 'vu-step');
+      const icon = idx < vuStageIdx ? '✅ ' : (idx === vuStageIdx ? '🚗 ' : '');
+      vuHtml.push(`<div class="${cls}">${icon}${label}</div>`);
+      if (idx < vuStages.length - 1) {
+        vuHtml.push(`<div class="vu-line ${idx < vuStageIdx ? 'done' : ''}"></div>`);
+      }
+    });
+    document.getElementById('vuBar').innerHTML = vuHtml.join('');
+
+    // Kiosk Cards
+    document.getElementById('kioskCiqTitle').textContent = t.kioskCiqTitle;
+    document.getElementById('kioskCiqSub').textContent = t.kioskCiqSub;
+    document.getElementById('kioskMomTitle').textContent = t.kioskMomTitle;
+    document.getElementById('kioskMomSub').textContent = t.kioskMomSub;
+    const isCiq = state.mission === 'ciq';
+    document.getElementById('kioskCiq').className = 'kiosk-card k-ciq ' + (isCiq ? 'active' : 'inactive-mission');
+    document.getElementById('kioskMom').className = 'kiosk-card k-mom ' + (!isCiq ? 'active' : 'inactive-mission');
+    const ciqTag = document.getElementById('kioskCiqTag');
+    const momTag = document.getElementById('kioskMomTag');
+    ciqTag.textContent = isCiq ? t.kioskActive : t.kioskSwitch;
+    ciqTag.className = 'kiosk-tag ' + (isCiq ? 'active-tag' : 'switch-btn');
+    momTag.textContent = !isCiq ? t.kioskActive : t.kioskSwitch;
+    momTag.className = 'kiosk-tag ' + (!isCiq ? 'active-tag' : 'switch-btn');
+
+    // 6 Colorful Status Buttons
+    document.getElementById('stepPanelTitle').textContent = t.stepPanelTitle;
+    const pBtn = document.getElementById('prevBtn');
+    if (pBtn) {
+      pBtn.textContent = t.prevBtn;
+      pBtn.disabled = state.activeStep <= 1;
+      pBtn.classList.toggle('disabled', state.activeStep <= 1);
+    }
+    document.getElementById('resetBtn').textContent = t.resetBtn;
+    const nextPulseStep = Math.min(state.activeStep + 1, 6);
+    const curBadgeText = lang === 'en' ? '🟢 CURRENT STATUS (LIVE)' : (lang === 'bm' ? '🟢 STATUS SEMASA (AKTIF)' : '🟢 当前 Status (动态框)');
+    const switchText = lang === 'en' ? 'Tap to Switch 👉' : (lang === 'bm' ? 'Tekan Tukar 👉' : '点击切换 👉');
+    const nextSwitchText = lang === 'en' ? '✨ Next: Tap Here 👉' : (lang === 'bm' ? '✨ Seterusnya 👉' : '✨ 下一步：点击切换 👉');
+    const gridHtml = STEPS.map(s => {
+      const isCompleted = s.step < state.activeStep;
+      const isCurrent = s.step === state.activeStep;
+      const isPulsingNext = s.step === nextPulseStep && !isCurrent;
+      const autoMin = getAutoEtaMin(s.etaMin);
+      const clock = calcClockTime(autoMin);
+      const etaLine = lang === 'en'
+        ? `🕒 Auto ETA: ${clock} (~${autoMin}m)`
+        : (lang === 'bm'
+          ? `🕒 Auto ETA: ${clock} (~${autoMin}m)`
+          : `🕒 自动计算 ETA：预计 ${clock} 抵达 (~${autoMin} 分钟)`);
+
+      if (isCurrent) {
+        return `
+          <div class="mood-card ${s.theme} m-current-status">
+            <div class="mood-top">
+              <span class="mood-step-label">${s['mood_' + lang]}</span>
+              <span class="curr-status-pill">${curBadgeText}</span>
+            </div>
+            <div class="mood-row-main">
+              <span class="mood-emoji">${s.emoji}</span>
+              <div class="mood-title">${s['title_' + lang]}</div>
+            </div>
+            <div class="mood-eta">${etaLine}</div>
+          </div>
+        `;
+      } else if (isCompleted) {
+        const prevSwitchLabel = lang === 'en' ? '⬅️ Tap to Switch Back' : (lang === 'bm' ? '⬅️ Tukar Balik' : '⬅️ 点击切回上一步 👉');
+        return `
+          <div class="mood-card m-other-grey">
+            <div class="mood-top">
+              <span class="mood-step-label">✅ ${s['mood_' + lang]}</span>
+              <button type="button" class="status-switch-btn prev-switch" onclick="triggerStep(${s.step})">${prevSwitchLabel}</button>
+            </div>
+            <div class="mood-row-main">
+              <span class="mood-emoji">${s.emoji}</span>
+              <div class="mood-title">${s['title_' + lang]}</div>
+            </div>
+            <div class="mood-eta">${etaLine}</div>
+          </div>
+        `;
+      } else {
+        const btnCls = isPulsingNext ? 'status-switch-btn next-pulse' : 'status-switch-btn';
+        const btnLabel = isPulsingNext ? nextSwitchText : switchText;
+        return `
+          <div class="mood-card m-other-grey">
+            <div class="mood-top">
+              <span class="mood-step-label">${s['mood_' + lang]}</span>
+              <button type="button" class="${btnCls}" onclick="triggerStep(${s.step})">${btnLabel}</button>
+            </div>
+            <div class="mood-row-main">
+              <span class="mood-emoji">${s.emoji}</span>
+              <div class="mood-title">${s['title_' + lang]}</div>
+            </div>
+            <div class="mood-eta">${etaLine}</div>
+          </div>
+        `;
+      }
+    }).join('');
+    document.getElementById('moodGrid').innerHTML = gridHtml;
+
+
+    // Render 3-Person Live Map Pins (#mapPinsStage)
+    const mapPinsStage = document.getElementById('mapPinsStage');
+    const curParentObj = PARENT_STEPS.find(x => x.step === state.parentStep) || PARENT_STEPS[0];
+    if (mapPinsStage) {
+      const sonLocLabel = state.activeStep === 1 ? (lang === 'en' ? 'SG Office' : '🏢 新加坡放工')
+        : (state.activeStep === 2 ? (lang === 'en' ? 'SG CIQ' : '🇸🇬 新加坡关卡')
+        : (state.activeStep <= 4 ? (lang === 'en' ? 'Causeway Bus' : '🚌 巴士过长堤')
+        : (state.activeStep === 5 ? (lang === 'en' ? 'Malaysia CIQ' : '🇲🇾 马来西亚关卡')
+        : (lang === 'en' ? 'At Pickup Point' : '🚗 已到上车点'))));
+      const sonOffCls = state.isOffline ? 'map-pin-card pin-offline' : 'map-pin-card';
+      const sonTag = state.isOffline
+        ? (lang === 'en' ? '🟠 No Signal (Last Pos)' : '🟠 关卡没线 (最后位置)')
+        : (lang === 'en' ? `🟢 Online · ~${getAutoEtaMin(state.lastEtaMin)}m` : `🟢 有线 · 约${getAutoEtaMin(state.lastEtaMin)}分钟到`);
+
+      const dadMomOff = !state.memberOnline.dad && !state.memberOnline.mom;
+      const dmCls = dadMomOff ? 'map-pin-card pin-offline' : 'map-pin-card';
+      const dmLoc = lang === 'en' ? curParentObj.map_en : curParentObj.map_zh;
+      const dmTag = dadMomOff
+        ? (lang === 'en' ? '🟠 Offline' : '🟠 暂时没线')
+        : (lang === 'en' ? `🟢 ${curParentObj.emoji} Step ${state.parentStep} (~${curParentObj.etaMin}m)` : `🟢 ${curParentObj.emoji} ${curParentObj.title_zh.split('（')[0]} (~${curParentObj.etaMin}m)`);
+
+      mapPinsStage.innerHTML = `
+        <div class="${sonOffCls}">
+          <div class="pin-avatar">🕺</div>
+          <div class="pin-name">${lang === 'en' ? 'Son (Moving ➔)' : '儿子 (过关方向 ➔)'}</div>
+          <div class="pin-loc">${sonLocLabel}</div>
+          <div class="pin-status-tag">${sonTag}</div>
+        </div>
+        <div class="map-meet-arrow">
+          <span>➔ 🚗 ⬅</span>
+          <span style="font-size:9.5px;color:#FEF08A;">${lang === 'en' ? 'Pickup Point' : '上车点汇合'}</span>
+        </div>
+        <div class="${dmCls}">
+          <div class="pin-avatar">👨🏻👩🏻</div>
+          <div class="pin-name">${lang === 'en' ? '(⬅ Driving) Dad & Mom' : '(⬅ 接送方向) 爸妈'}</div>
+          <div class="pin-loc">${dmLoc}</div>
+          <div class="pin-status-tag">${dmTag}</div>
+        </div>
+      `;
+    }
+
+    // Render Parents Separated Response Steps (1. 收到 -> 2. 准备出门 -> 3. 已在路上 -> 4. 已到上车点)
+    const pBannerText = document.getElementById('parentLiveText');
+    const pEtaPill = document.getElementById('parentEtaPill');
+    const pPrevBtn = document.getElementById('parentPrevBtn');
+    const pGrid = document.getElementById('parentMoodGrid');
+    if (pGrid) {
+      const pClock = calcClockTime(curParentObj.etaMin);
+      pBannerText.textContent = lang === 'en'
+        ? `📣 Dad & Mom Current Reply: ${curParentObj.emoji} ${curParentObj.title_en}`
+        : `📣 爸妈当前回应：${curParentObj.emoji} ${curParentObj.title_zh}`;
+      pEtaPill.textContent = lang === 'en'
+        ? `🕒 Est. ${pClock} (~${curParentObj.etaMin}m)`
+        : `🕒 预计 ${pClock} 到 (~${curParentObj.etaMin}m)`;
+      if (pPrevBtn) {
+        pPrevBtn.disabled = state.parentStep <= 1;
+        pPrevBtn.classList.toggle('disabled', state.parentStep <= 1);
+        pPrevBtn.textContent = t.prevBtn;
+      }
+      document.getElementById('parentResetBtn').textContent = t.resetBtn;
+
+      const nextParentStep = Math.min(state.parentStep + 1, 4);
+      const pCurBadge = lang === 'en' ? '🟢 DAD & MOM CURRENT STATUS' : '🟢 爸妈当前状态 (动态框)';
+      pGrid.innerHTML = PARENT_STEPS.map(ps => {
+        const isDone = ps.step < state.parentStep;
+        const isCurr = ps.step === state.parentStep;
+        const isNext = ps.step === nextParentStep && !isCurr;
+        const psClock = calcClockTime(ps.etaMin);
+        const psEtaLine = lang === 'en'
+          ? `🕒 Auto ETA to Pickup Point: ${psClock} (~${ps.etaMin} mins)`
+          : `🕒 自动计算 ETA：预计 ${psClock} 抵达上车点 (~${ps.etaMin} 分钟)`;
+
+        if (isCurr) {
+          return `
+            <div class="mood-card ${ps.theme} m-current-status">
+              <div class="mood-top">
+                <span class="mood-step-label">${ps['step_' + lang]}</span>
+                <span class="curr-status-pill">${pCurBadge}</span>
+              </div>
+              <div class="mood-row-main">
+                <span class="mood-emoji">${ps.emoji}</span>
+                <div class="mood-title">${ps['title_' + lang]}</div>
+              </div>
+              <div class="mood-eta">${psEtaLine}</div>
+            </div>
+          `;
+        } else if (isDone) {
+          const prevParentLabel = lang === 'en' ? '⬅️ Tap to Switch Back' : (lang === 'bm' ? '⬅️ Tukar Balik' : '⬅️ 点击切回上一步 👉');
+          return `
+            <div class="mood-card m-other-grey">
+              <div class="mood-top">
+                <span class="mood-step-label">✅ ${ps['step_' + lang]}</span>
+                <button type="button" class="status-switch-btn prev-switch" onclick="triggerParentStep(${ps.step})">${prevParentLabel}</button>
+              </div>
+              <div class="mood-row-main">
+                <span class="mood-emoji">${ps.emoji}</span>
+                <div class="mood-title">${ps['title_' + lang]}</div>
+              </div>
+              <div class="mood-eta">${psEtaLine}</div>
+            </div>
+          `;
+        } else {
+          const bCls = isNext ? 'status-switch-btn next-pulse' : 'status-switch-btn';
+          const bTxt = isNext ? nextSwitchText : switchText;
+          return `
+            <div class="mood-card m-other-grey">
+              <div class="mood-top">
+                <span class="mood-step-label">${ps['step_' + lang]}</span>
+                <button type="button" class="${bCls}" onclick="triggerParentStep(${ps.step})">${bTxt}</button>
+              </div>
+              <div class="mood-row-main">
+                <span class="mood-emoji">${ps.emoji}</span>
+                <div class="mood-title">${ps['title_' + lang]}</div>
+              </div>
+              <div class="mood-eta">${psEtaLine}</div>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    // Right Panel
+    document.getElementById('mapPanelTitle').textContent = t.mapPanelTitle;
+    document.getElementById('ergoTag').textContent = t.ergoTag;
+    document.getElementById('locPills').innerHTML = LOCATIONS.map((loc, idx) =>
+      `<button class="loc-pill ${idx === state.activeLocIdx ? 'active' : ''}" onclick="selectLocation(${idx})">${loc[lang]}</button>`
+    ).join('');
+
+    const clockNow = calcClockTime(state.lastEtaMin);
+    document.getElementById('waBtnText').textContent = lang === 'en'
+      ? `📲 1-Tap WhatsApp Dad & Mom (Est. Arrival ${clockNow})`
+      : (lang === 'bm'
+        ? `📲 WhatsApp Ayah & Ibu (Tiba ${clockNow})`
+        : `📲 一键 WhatsApp 唤醒爸妈 (预计 ${clockNow} 抵达)`);
+    document.getElementById('waBtnRight').textContent = t.waBtnRight;
+    document.getElementById('voiceBtnText').textContent = t.voiceBtnText;
+    document.getElementById('voiceBtnRight').textContent = t.voiceBtnRight;
+
+    document.getElementById('quickRow').innerHTML = QUICK_PILLS.map((p, idx) =>
+      `<button class="quick-pill" onclick="triggerQuickPill(${idx})">${p[lang]} (${calcClockTime(p.etaMin)}) 👉</button>`
+    ).join('');
+  }
+
+  renderAll();
+</script>
+</body>
+</html>
